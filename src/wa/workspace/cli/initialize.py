@@ -15,7 +15,7 @@ def register_workspace_initialize(app: typer.Typer):
         ] = False,
     ) -> None:
         """Create a folder to store data related to a workspace."""
-        from wa.workspace.tools import create_workspace
+        from wa.workspace.tools.create import create_workspace
 
         try:
             workspace = create_workspace(name=name, out_path=out_path, force=force)
