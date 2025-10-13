@@ -1,6 +1,6 @@
 [project]
 name = "workspace-agent"
-version = "0.0.0"
+version = "0.0.1"
 description = "Workspace management package for `out` folder shared between different packages."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -34,4 +34,3 @@ dev = [
     "pytest>=8.4.1",
     "pytest-cov>=6.2.1",
 ]
-
