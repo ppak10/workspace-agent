@@ -5,9 +5,9 @@
 
  Workspace management package for `out` folder shared between different packages.
 
-<div style="display: flex; justify-content: center;">
+<p align="center">
   <img src="./icon.svg" alt="Logo" width="50%">
-</div>
+</p>
 
 ## Getting Started
 ### Installation
