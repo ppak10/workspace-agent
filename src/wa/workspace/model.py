@@ -12,8 +12,8 @@ class Workspace(BaseModel):
     """
 
     name: str
-    out_path: Path | None = None
     workspace_path: Path | None = None
+    workspaces_folder_path: Path | None = None
     # subfolders: list[str] = []
     config_file: str = "workspace.json"
 

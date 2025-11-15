@@ -7,7 +7,9 @@ from .options import WorkspaceOption
 
 
 def get_workspace_path(
-    workspace: WorkspaceOption, config_file: str = "workspace.json"
+    workspace: WorkspaceOption,
+    config_file: str = "workspace.json",
+    workspaces_folder_name: str = "workspaces",
 ) -> Path:
     """
     Checks for workspace config file in current directory or throws error.
@@ -17,7 +19,7 @@ def get_workspace_path(
         from wa.workspace.utils import get_project_root
 
         project_root = get_project_root()
-        workspace_dir = project_root / "out" / workspace
+        workspace_dir = project_root / workspaces_folder_name / workspace
 
     else:
         # Check for workspace config file in current directory

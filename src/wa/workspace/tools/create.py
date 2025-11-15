@@ -6,7 +6,7 @@ from wa.workspace.utils import get_project_root
 
 def create_workspace(
     name: str,
-    out_path: Path | None = None,
+    workspaces_folder_path: Path | None = None,
     force: bool = False,
     **kwargs,
 ) -> Workspace:
@@ -15,18 +15,20 @@ def create_workspace(
     """
 
     # Use the out_path if provided, otherwise default to package out_path.
-    if out_path is None:
-        out_path = get_project_root() / "out"
+    if workspaces_folder_path is None:
+        workspaces_folder_path = get_project_root() / "workspaces"
 
     # Create the `out` directory if it doesn't exist.
-    out_path.mkdir(exist_ok=True)
+    workspaces_folder_path.mkdir(exist_ok=True)
 
-    workspace_path = out_path / name
+    workspace_path = workspaces_folder_path / name
 
     if workspace_path.exists() and not force:
         raise FileExistsError("Workspace already exists")
 
-    workspace = Workspace(name=name, out_path=out_path, **kwargs)
+    workspace = Workspace(
+        name=name, workspaces_folder_path=workspaces_folder_path, **kwargs
+    )
     workspace.save()
 
     return workspace

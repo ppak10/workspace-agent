@@ -12,13 +12,13 @@ def get_project_root(parents_index: int = 4) -> Path:
             parent_folder = package_path.parent.name
             if parent_folder == "src":
                 # Local Development
-                # package_path: /.../out-workspace/src/wa
-                # package_path.parent.parent: /.../out-workspace
+                # package_path: /.../workspace-agent/src/wa
+                # package_path.parent.parent: /.../workspace-agent
                 return package_path.parent.parent
             else:
                 # PyPI Install
-                # package_path: /.../out-workspace-agent/.venv/lib/python3.13/site-packages/wa
-                # package_path.parents[parents_index]: /.../out-workspace-agent
+                # package_path: /.../workspace-agent/.venv/lib/python3.13/site-packages/wa
+                # package_path.parents[parents_index]: /.../workspace-agent
                 return package_path.parents[parents_index]
     except ImportError:
         pass

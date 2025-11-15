@@ -1,11 +1,11 @@
 [project]
 name = "workspace-agent"
 version = "0.0.2"
-description = "Workspace management package for `out` folder shared between different packages."
+description = "Workspace management package for `workspaces` folder shared between different packages."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "mcp>=1.14.0",
+    "mcp>=1.21.1",
     "pydantic>=2.11.9",
     "rich>=14.1.0",
     "typer>=0.17.4",
