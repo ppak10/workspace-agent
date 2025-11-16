@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from wa.folder.read import read_workspace_folder
-from wa.models import Workspace
+from wa.models import Workspace, WorkspaceSubfolder
 
 
 class TestReadWorkspaceFolder:
@@ -30,7 +30,11 @@ class TestReadWorkspaceFolder:
         workspace = Workspace(
             name="test_with_subfolders",
             workspaces_folder_path=temp_workspaces_path,
-            subfolders=["data", "models", "results"],
+            subfolders=[
+                WorkspaceSubfolder(name="data"),
+                WorkspaceSubfolder(name="models"),
+                WorkspaceSubfolder(name="results"),
+            ],
         )
         workspace.save()
 
@@ -40,7 +44,7 @@ class TestReadWorkspaceFolder:
             workspaces_folder_path=temp_workspaces_path,
         )
 
-        assert loaded_workspace.subfolders == ["data", "models", "results"]
+        assert set(loaded_workspace.subfolders.keys()) == {"data", "models", "results"}
 
     def test_read_nonexistent_workspace_raises_error(self, temp_workspaces_path: Path):
         """Test that reading a non-existent workspace raises FileNotFoundError."""
@@ -68,7 +72,10 @@ class TestReadWorkspaceFolder:
         original = Workspace(
             name="complete_workspace",
             workspaces_folder_path=temp_workspaces_path,
-            subfolders=["sub1", "sub2"],
+            subfolders=[
+                WorkspaceSubfolder(name="sub1"),
+                WorkspaceSubfolder(name="sub2"),
+            ],
         )
         original.save()
 
@@ -80,7 +87,7 @@ class TestReadWorkspaceFolder:
 
         assert loaded.name == original.name
         assert loaded.path == original.path
-        assert loaded.subfolders == original.subfolders
+        assert loaded.subfolders.keys() == original.subfolders.keys()
         assert loaded.config_file == original.config_file
 
     def test_read_workspace_with_default_path(
@@ -109,11 +116,11 @@ class TestReadWorkspaceFolder:
         assert loaded.path == workspaces_path / sample_workspace_name
 
     def test_read_workspace_empty_subfolders(self, temp_workspaces_path: Path):
-        """Test reading a workspace with empty subfolders list."""
+        """Test reading a workspace with empty subfolders dict."""
         workspace = Workspace(
             name="test_empty",
             workspaces_folder_path=temp_workspaces_path,
-            subfolders=[],
+            subfolders={},
         )
         workspace.save()
 
@@ -122,7 +129,7 @@ class TestReadWorkspaceFolder:
             workspaces_folder_path=temp_workspaces_path,
         )
 
-        assert loaded.subfolders == []
+        assert loaded.subfolders == {}
 
     def test_read_workspace_config_file_field(self, temp_workspaces_path: Path):
         """Test that config_file field is properly loaded."""

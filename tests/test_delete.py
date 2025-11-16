@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from wa.folder.delete import delete_workspace_folder
-from wa.models import Workspace
+from wa.models import Workspace, WorkspaceSubfolder
 
 
 class TestDeleteWorkspaceFolder:
@@ -32,7 +32,10 @@ class TestDeleteWorkspaceFolder:
         workspace = Workspace(
             name="workspace_with_subs",
             workspaces_folder_path=temp_workspaces_path,
-            subfolders=["data", "models"],
+            subfolders=[
+                WorkspaceSubfolder(name="data"),
+                WorkspaceSubfolder(name="models"),
+            ],
         )
         workspace.save()
 
@@ -56,7 +59,10 @@ class TestDeleteWorkspaceFolder:
         workspace = Workspace(
             name="workspace_with_subs",
             workspaces_folder_path=temp_workspaces_path,
-            subfolders=["data", "models"],
+            subfolders=[
+                WorkspaceSubfolder(name="data"),
+                WorkspaceSubfolder(name="models"),
+            ],
         )
         workspace.save()
 
@@ -161,15 +167,15 @@ class TestDeleteWorkspaceFolder:
     def test_delete_workspace_with_empty_subfolders_list(
         self, temp_workspaces_path: Path
     ):
-        """Test deleting workspace with empty subfolders list doesn't require force."""
+        """Test deleting workspace with empty subfolders dict doesn't require force."""
         workspace = Workspace(
             name="empty_subs",
             workspaces_folder_path=temp_workspaces_path,
-            subfolders=[],
+            subfolders={},
         )
         workspace.save()
 
-        # Should work without force flag since subfolders list is empty
+        # Should work without force flag since subfolders dict is empty
         result = delete_workspace_folder(
             name="empty_subs",
             workspaces_folder_path=temp_workspaces_path,

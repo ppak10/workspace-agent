@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from wa.folder.create import create_workspace_folder
-from wa.models import Workspace
+from wa.models import Workspace, WorkspaceSubfolder
 
 
 class TestCreateWorkspaceFolder:
@@ -107,10 +107,13 @@ class TestCreateWorkspaceFolder:
         workspace = create_workspace_folder(
             name="test",
             workspaces_folder_path=temp_workspaces_path,
-            subfolders=["data", "models"],
+            subfolders=[
+                WorkspaceSubfolder(name="data"),
+                WorkspaceSubfolder(name="models"),
+            ],
         )
 
-        assert workspace.subfolders == ["data", "models"]
+        assert set(workspace.subfolders.keys()) == {"data", "models"}
 
     def test_create_workspace_config_is_valid_json(
         self, temp_workspaces_path: Path, sample_workspace_name: str

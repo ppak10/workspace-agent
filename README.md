@@ -1,7 +1,7 @@
-[![pytest](https://github.com/ppak10/workspace-agent/actions/workflows/pytest.yml/badge.svg)](https://github.com/ppak10/workspace-agent/actions/workflows/pytest.yml)
 [![claude-code](https://github.com/ppak10/workspace-agent/actions/workflows/claude-code.yml/badge.svg)](https://github.com/ppak10/workspace-agent/actions/workflows/claude-code.yml)
 [![gemini-cli](https://github.com/ppak10/workspace-agent/actions/workflows/gemini-cli.yml/badge.svg)](https://github.com/ppak10/workspace-agent/actions/workflows/gemini-cli.yml)
 [![codex](https://github.com/ppak10/workspace-agent/actions/workflows/codex.yml/badge.svg)](https://github.com/ppak10/workspace-agent/actions/workflows/codex.yml)
+[![pytest](https://github.com/ppak10/workspace-agent/actions/workflows/pytest.yml/badge.svg)](https://github.com/ppak10/workspace-agent/actions/workflows/pytest.yml)
 [![codecov](https://codecov.io/github/ppak10/workspace-agent/graph/badge.svg?token=BJBTFCWMR4)](https://codecov.io/github/ppak10/workspace-agent)
 
 # workspace-agent

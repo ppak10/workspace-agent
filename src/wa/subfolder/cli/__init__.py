@@ -1,9 +1,6 @@
 from .__main__ import app
-from .initialize import register_workspace_initialize
+from .create import register_workspace_subfolder_create
 
-# from .list import register_workspace_list
-
-_ = register_workspace_initialize(app)
-# _ = register_workspace_list(app)
+_ = register_workspace_subfolder_create(app)
 
 __all__ = ["app"]
