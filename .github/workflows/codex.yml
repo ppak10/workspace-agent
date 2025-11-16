@@ -1,9 +1,9 @@
-name: claude-code 
+name: codex
 
 on: [push, pull_request]
 
 jobs:
-  claude-code:
+  codex:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -33,19 +33,19 @@ jobs:
     - name: Install workspace-agent package locally
       run: uv pip install -e .
 
-    - name: Install Claude Code CLI
-      run: npm install -g @anthropic-ai/claude-code
+    - name: Install Codex CLI
+      run: npm install -g codex
 
-    - name: Verify Claude Code installation
+    - name: Verify Codex CLI installation
       run: |
-        which claude
-        claude --version
+        which codex
+        codex --version
 
-    - name: Install MCP server to Claude Code
+    - name: Install MCP server to Codex CLI
       run: |
         source .venv/bin/activate
         workspace mcp install --dev
 
     - name: Verify workspace MCP installation
       run: |
-        claude mcp get workspace 
+        codex mcp get workspace

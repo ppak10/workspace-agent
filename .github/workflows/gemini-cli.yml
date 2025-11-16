@@ -1,9 +1,9 @@
-name: claude-code 
+name: gemini-cli
 
 on: [push, pull_request]
 
 jobs:
-  claude-code:
+  gemini-cli:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -33,19 +33,19 @@ jobs:
     - name: Install workspace-agent package locally
       run: uv pip install -e .
 
-    - name: Install Claude Code CLI
-      run: npm install -g @anthropic-ai/claude-code
+    - name: Install Gemini CLI
+      run: npm install -g @google/gemini-cli
 
-    - name: Verify Claude Code installation
+    - name: Verify Gemini CLI installation
       run: |
-        which claude
-        claude --version
+        which gemini
+        gemini --version
 
-    - name: Install MCP server to Claude Code
+    - name: Install MCP server to Gemini CLI
       run: |
         source .venv/bin/activate
-        workspace mcp install --dev
+        workspace mcp install --dev --client gemini-cli
 
     - name: Verify workspace MCP installation
       run: |
-        claude mcp get workspace 
+        gemini mcp list
