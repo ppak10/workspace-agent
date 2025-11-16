@@ -43,6 +43,7 @@ jobs:
 
     - name: Install MCP server to Claude Code
       run: |
+        source .venv/bin/activate
         workspace mcp install --dev
 
     - name: Verify workspace MCP installation
