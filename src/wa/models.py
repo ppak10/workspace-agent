@@ -12,9 +12,10 @@ class Workspace(BaseModel):
     """
 
     name: str
-    workspace_path: Path | None = None
-    workspaces_folder_path: Path | None = None
-    # subfolders: list[str] = []
+    # version: str
+    path: Path = Path("")
+    workspaces_folder_path: Path = Path("")
+    subfolders: list[str] = []
     config_file: str = "workspace.json"
 
     @field_validator("name", mode="before")
@@ -26,11 +27,11 @@ class Workspace(BaseModel):
 
     @model_validator(mode="after")
     def populate_missing_paths(self) -> "Workspace":
-        if not self.out_path:
-            self.out_path = get_project_root() / "out"
+        if not self.workspaces_folder_path:
+            self.workspaces_folder_path = get_project_root() / "workspaces"
 
-        if not self.workspace_path:
-            self.workspace_path = self.out_path / self.name
+        if self.path == Path(""):
+            self.path = self.workspaces_folder_path / self.name
 
         return self
 
@@ -86,14 +87,10 @@ class Workspace(BaseModel):
     def save(self, path: Path | None = None) -> Path:
         """
         Save the configuration to a YAML file.
-        If no path is given, saves to '<workspace_path>/workspace.json'.
+        If no path is given, saves to '<workspace.path>/workspace.json'.
         """
         if path is None:
-            if not self.workspace_path:
-                raise ValueError(
-                    "workspace_path must be set to determine save location."
-                )
-            path = self.workspace_path / self.config_file
+            path = self.path / self.config_file
 
         path.parent.mkdir(parents=True, exist_ok=True)
         _ = path.write_text(self.model_dump_json(indent=2))

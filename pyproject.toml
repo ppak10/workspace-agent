@@ -16,7 +16,7 @@ Homepage = "https://github.com/ppak10/workspace-agent"
 Issues = "https://github.com/ppak10/workspace-agent/issues"
 
 [project.scripts]
-wa = "wa.cli:app"
+workspace = "wa.cli:app"
 
 [tool.setuptools.package-data]
 "wa.data" = ["**/*.md"]

@@ -1,16 +1,14 @@
 from mcp.server.fastmcp import FastMCP
 
-from wa.workspace.mcp import (
-    register_workspace_initialize,
-    register_workspace_resources,
-    register_workspace_tools,
+from wa.folder.mcp import (
+    register_workspace_folder_resources,
+    register_workspace_folder_tools,
 )
 
 app = FastMCP(name="workspace-agent")
 
-_ = register_workspace_initialize(app)
-_ = register_workspace_resources(app)
-_ = register_workspace_tools(app)
+_ = register_workspace_folder_resources(app)
+_ = register_workspace_folder_tools(app)
 
 
 def main():

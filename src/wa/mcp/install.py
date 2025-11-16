@@ -15,7 +15,7 @@ def install(path: Path, client: str, include_agent: bool = True) -> None:
                 "claude",
                 "mcp",
                 "add-json",
-                "wa",
+                "workspace",
                 f'{{"command": "uv", "args": ["--directory", "{path}", "run", "-m", "wa.mcp"]}}',
             ]
 
@@ -39,7 +39,7 @@ def install(path: Path, client: str, include_agent: bool = True) -> None:
                 "gemini",
                 "mcp",
                 "add",
-                "wa",
+                "workspace",
                 "uv",
                 "--directory",
                 f"{path}",
@@ -53,7 +53,7 @@ def install(path: Path, client: str, include_agent: bool = True) -> None:
                 "codex",
                 "mcp",
                 "add",
-                "wa",
+                "workspace",
                 "uv",
                 "--directory",
                 f"{path}",

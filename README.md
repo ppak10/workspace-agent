@@ -19,23 +19,23 @@ uv add workspace-agent
 #### Claude Code
 1. Install MCP tools and Agent
 ```bash
-wa mcp install
+workspace mcp install
 ```
 
 - Defaults to claude code but other options include `codex` and `gemini-cli`
 ```bash
-wa mcp install --client claude-code
-wa mcp install --client codex
-wa mcp install --client gemini-cli 
+workspace mcp install --client claude-code
+workspace mcp install --client codex
+workspace mcp install --client gemini-cli 
 ```
 
 - If updating, you will need to remove the previously existing MCP tools
 ```bash
-wa mcp uninstall
+workspace mcp uninstall
 ```
 
 ```bash
-wa mcp uninstall --client claude-code
-wa mcp uninstall --client codex
-wa mcp uninstall --client gemini-cli 
+workspace mcp uninstall --client claude-code
+workspace mcp uninstall --client codex
+workspace mcp uninstall --client gemini-cli 
 ```
