@@ -1,0 +1,9 @@
+# act configuration file
+# This file contains default options for running GitHub Actions locally
+
+# Use linux/amd64 architecture (important for M-series Macs)
+--container-architecture linux/amd64
+
+# Use a fuller Ubuntu image that includes more tools
+# Uncomment if you encounter issues with missing dependencies
+# -P ubuntu-latest=catthehacker/ubuntu:full-latest
