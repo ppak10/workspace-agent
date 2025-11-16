@@ -1,8 +1,9 @@
 import re
 
 from pathlib import Path
-from pydantic import BaseModel, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
+from . import __version__
 from .utils import get_project_root
 
 
@@ -12,7 +13,7 @@ class Workspace(BaseModel):
     """
 
     name: str
-    # version: str
+    version: str = Field(default_factory=lambda: __version__)
     path: Path = Path("")
     workspaces_folder_path: Path = Path("")
     subfolders: list[str] = []

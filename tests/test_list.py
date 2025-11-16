@@ -91,10 +91,12 @@ class TestListWorkspaceFolders:
 
     def test_list_with_default_path(self, monkeypatch, tmp_path: Path):
         """Test listing with default path from get_project_root."""
-        from wa import utils
+        import wa.folder.list
+        import wa.models
 
-        # Mock get_project_root to return our temp path
-        monkeypatch.setattr(utils, "get_project_root", lambda: tmp_path)
+        # Mock get_project_root in both modules where it's used
+        monkeypatch.setattr("wa.folder.list.get_project_root", lambda: tmp_path)
+        monkeypatch.setattr("wa.models.get_project_root", lambda: tmp_path)
 
         # Create workspace at default location
         workspaces_path = tmp_path / "workspaces"
