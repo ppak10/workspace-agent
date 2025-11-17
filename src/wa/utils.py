@@ -1,4 +1,5 @@
 import importlib.util
+import re
 
 from pathlib import Path
 
@@ -23,3 +24,14 @@ def get_project_root(parents_index: int = 4) -> Path:
     except ImportError:
         pass
     return Path.cwd()
+
+
+def create_pathname(name: str) -> str:
+    """
+    Sanitizes name to use for file or folder name
+    """
+
+    name = name.replace(" ", "_")
+    name = re.sub(r'[<>:"/\\|?*\x00-\x1F]', "", name)
+
+    return name[:255]

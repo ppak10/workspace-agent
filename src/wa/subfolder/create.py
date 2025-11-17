@@ -33,13 +33,16 @@ def create_workspace_subfolder(
             if index == 0:
                 workspace_subfolder = WorkspaceSubfolder(name=name, **kwargs)
             else:
+                subfolders = {
+                    workspace_subfolder.name: workspace_subfolder,
+                }
                 workspace_subfolder = WorkspaceSubfolder(
-                    name=name, subfolders=[workspace_subfolder], **kwargs
+                    name=name, subfolders=subfolders, **kwargs
                 )
 
-    workspace.initialize_subfolder(
+    subfolder = workspace.initialize_subfolder(
         subfolder=workspace_subfolder,
         force=force,
     )
 
-    return workspace_subfolder
+    return subfolder

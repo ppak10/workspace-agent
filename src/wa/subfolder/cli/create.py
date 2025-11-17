@@ -9,7 +9,7 @@ def register_workspace_subfolder_create(app: typer.Typer):
     @app.command(name="create")
     def workspace_subfolder_create(
         workspace_name: str,
-        subfolder_name: str,
+        subfolder_name: Annotated[list[str], typer.Argument()],
         workspaces_folder_path: Path | None = None,
         force: Annotated[
             bool, typer.Option("--force", help="Overwrite existing subfolder")
@@ -19,13 +19,13 @@ def register_workspace_subfolder_create(app: typer.Typer):
         from wa.subfolder.create import create_workspace_subfolder
 
         try:
-            workspace = create_workspace_subfolder(
+            subfolder = create_workspace_subfolder(
                 workspace_subfolder_name=subfolder_name,
                 workspace_folder_name=workspace_name,
                 workspaces_folder_path=workspaces_folder_path,
                 force=force,
             )
-            rprint(f"✅ Workspace subfolder created at: {workspace.path}")
+            rprint(f"✅ Workspace subfolder created at: {subfolder.path}")
         except FileExistsError as e:
             rprint(
                 f"⚠️  [yellow]Workspace Subfolder: `{subfolder_name}` already exists.[/yellow]"
