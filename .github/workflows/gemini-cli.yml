@@ -49,3 +49,7 @@ jobs:
     - name: Verify workspace MCP installation
       run: |
         gemini mcp list
+
+    - name: Uninstall MCP server
+      run: |
+        workspace mcp uninstall gemini-cli

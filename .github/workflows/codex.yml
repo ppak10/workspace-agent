@@ -49,3 +49,7 @@ jobs:
     - name: Verify workspace MCP installation
       run: |
         codex mcp get workspace
+
+    - name: Uninstall MCP server
+      run: |
+        workspace mcp uninstall codex
