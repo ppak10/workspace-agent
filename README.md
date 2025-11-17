@@ -1,3 +1,6 @@
+[![claude-code](https://github.com/ppak10/workspace-agent/actions/workflows/claude-code.yml/badge.svg)](https://github.com/ppak10/workspace-agent/actions/workflows/claude-code.yml)
+[![gemini-cli](https://github.com/ppak10/workspace-agent/actions/workflows/gemini-cli.yml/badge.svg)](https://github.com/ppak10/workspace-agent/actions/workflows/gemini-cli.yml)
+[![codex](https://github.com/ppak10/workspace-agent/actions/workflows/codex.yml/badge.svg)](https://github.com/ppak10/workspace-agent/actions/workflows/codex.yml)
 [![pytest](https://github.com/ppak10/workspace-agent/actions/workflows/pytest.yml/badge.svg)](https://github.com/ppak10/workspace-agent/actions/workflows/pytest.yml)
 [![codecov](https://codecov.io/github/ppak10/workspace-agent/graph/badge.svg?token=BJBTFCWMR4)](https://codecov.io/github/ppak10/workspace-agent)
 
@@ -18,12 +21,24 @@ uv add workspace-agent
 ### Agent
 #### Claude Code
 1. Install MCP tools and Agent
-- Defaults to claude code
 ```bash
-wa mcp install
+workspace mcp install
+```
+
+- Defaults to claude code but other options include `codex` and `gemini-cli`
+```bash
+workspace mcp install --client claude-code
+workspace mcp install --client codex
+workspace mcp install --client gemini-cli 
 ```
 
 - If updating, you will need to remove the previously existing MCP tools
 ```bash
-claude mcp remove wa
+workspace mcp uninstall
+```
+
+```bash
+workspace mcp uninstall --client claude-code
+workspace mcp uninstall --client codex
+workspace mcp uninstall --client gemini-cli 
 ```

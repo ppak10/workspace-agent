@@ -14,13 +14,17 @@ def register_mcp_install(app: typer.Typer):
             str,
             typer.Option("--client", help="Target client to install for."),
         ] = "claude-code",
-        include_agent: Annotated[bool, typer.Option("--include-agent")] = True,
+        include_agent: Annotated[bool, typer.Option("--include-agent")] = False,
         project_path: Annotated[str | None, typer.Option("--project-path")] = None,
+        dev: Annotated[bool, typer.Option("--dev")] = False,
     ) -> None:
         import wa
 
         # Determine project root path
-        if project_path:
+        if dev:
+            # /Users/ppak/GitHub/workspace-agent on mac mini
+            wa_path = Path(wa.__file__).parents[2]
+        elif project_path:
             wa_path = Path(project_path)
         else:
             # Path(wa.__file__) example:
@@ -29,7 +33,7 @@ def register_mcp_install(app: typer.Typer):
             wa_path = Path(wa.__file__).parents[5]
 
         rprint(
-            f"[bold green]Using `out-workspace` packaged under project path:[/bold green] {wa_path}"
+            f"[bold green]Using `workspace-agent` packaged under project path:[/bold green] {wa_path}"
         )
 
         install(wa_path, client=client, include_agent=include_agent)

@@ -1,9 +1,6 @@
-from .__main__ import app
-from .initialize import register_workspace_initialize
+from .create import register_create
+from .delete import register_delete
+from .list import register_list
+from .read import register_read
 
-# from .list import register_workspace_list
-
-_ = register_workspace_initialize(app)
-# _ = register_workspace_list(app)
-
-__all__ = ["app"]
+__all__ = ["register_create", "register_delete", "register_list", "register_read"]

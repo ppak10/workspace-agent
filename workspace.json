@@ -1,0 +1,7 @@
+{
+  "name": "test",
+  "path": ".",
+  "workspaces_folder_path": "/Users/ppak/GitHub/workspace-agent/workspaces",
+  "subfolders": [],
+  "config_file": "workspace.json"
+}

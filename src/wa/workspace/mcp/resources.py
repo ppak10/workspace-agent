@@ -2,23 +2,18 @@ from mcp.server import FastMCP
 
 
 def register_workspace_resources(app: FastMCP):
+    from wa.models import Workspace
 
     @app.resource("workspace://")
     def workspaces() -> list[str] | None:
-        from wa.workspace.tools.list import list_workspaces
+        from wa.workspace.list import list_workspaces
 
         return list_workspaces()
 
     @app.resource("workspace://{workspace}/")
-    def workspace_subfolders(workspace: str) -> list[str] | None:
-        from wa.workspace.tools.list import list_workspace_subfolders
+    def workspace(workspace: str) -> Workspace | None:
+        from wa.workspace.read import read_workspace
 
-        return list_workspace_subfolders(workspace)
+        return read_workspace(workspace)
 
-    @app.resource("workspace://{workspace}/{subfolder}/")
-    def workspace_subfolder_content(workspace: str, subfolder: str) -> list[str] | None:
-        from wa.workspace.tools.list import list_workspace_subfolder_content
-
-        return list_workspace_subfolder_content(workspace, subfolder)
-
-    _ = (workspaces, workspace_subfolders, workspace_subfolder_content)
+    _ = (workspaces, workspace)

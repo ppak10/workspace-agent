@@ -6,7 +6,7 @@ from rich import print as rprint
 
 app = typer.Typer(
     name="workspace-agent",
-    help="Manage workspace folders",
+    help="Utilize tool calling to manage workspace folders and subfolders",
     add_completion=False,
     no_args_is_help=True,
 )

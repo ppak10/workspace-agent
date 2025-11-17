@@ -1,64 +1,120 @@
 from mcp.server import FastMCP
 
+from pathlib import Path
+from typing import Literal, Union
+
+Method = Literal["create", "read", "delete"]
+
 
 def register_workspace_tools(app: FastMCP):
-    from wa.mcp.types import ToolSuccess
-    from wa.mcp.utils import tool_success
-    from wa.workspace.model import Workspace
+    from wa.mcp.types import ToolSuccess, ToolError
+    from wa.mcp.utils import tool_success, tool_error
+    from wa.models import Workspace, WorkspaceFolder
 
     @app.tool(
-        title="List Workspaces",
-        description="Provides a list of created workspaces.",
+        title="Workspace Management",
+        description="List all workspace folders or create, read, and delete a given workspace",
         structured_output=True,
     )
-    def workspaces() -> ToolSuccess[list[str] | None]:
-        from wa.workspace.tools.list import list_workspaces
+    def workspace_management(
+        workspace_name: str | None = None,
+        folder_name: list[str] = [],
+        method: Method = "read",
+        include_files: bool = False,
+        force: bool = False,
+    ) -> Union[
+        ToolSuccess[Path | Workspace | WorkspaceFolder | list[str] | None], ToolError
+    ]:
+        """
+        Manage workspace folders.
 
-        return tool_success(list_workspaces())
+        Args:
+            workspace_name: Folder name of workspace, lists all workspace folders if left empty.
+            folder_name: List of folder names, ordered by path heirarchy.
+            method: Either 'create', 'read', or 'delete'. Requires 'workspace_name' to be provided.
+            include_files: Include file names for 'read' method for workspace folder.
+            force: Utilized for either 'create' or 'delete methods.
+        """
+        from wa.workspace.list import list_workspaces
+        from wa.workspace.create import create_workspace, create_workspace_folder
+        from wa.workspace.read import read_workspace, read_workspace_folder
+        from wa.workspace.delete import delete_workspace
 
-    @app.tool(
-        title="List Workspace Subfolders",
-        description="Lists of registered subfolders in a given workspace.",
-        structured_output=True,
-    )
-    def workspace_subfolders(workspace_name: str) -> ToolSuccess[list[str] | None]:
-        from wa.workspace.tools.list import list_workspace_subfolders
+        try:
+            if workspace_name is None:
+                workspace_folder_names = list_workspaces()
+                return tool_success(workspace_folder_names)
 
-        return tool_success(list_workspace_subfolders(workspace_name))
+            elif method == "create":
+                if len(folder_name) > 0:
+                    folder = create_workspace_folder(
+                        workspace_folder_name=folder_name,
+                        workspace_name=workspace_name,
+                        force=force,
+                    )
+                    return tool_success(folder)
+                else:
+                    workspace = create_workspace(
+                        workspace_name=workspace_name,
+                        force=force,
+                    )
+                    return tool_success(workspace)
 
-    @app.tool(
-        title="List Workspace Subfolder Content",
-        description="Lists content within a registered subfolder for a workspace.",
-        structured_output=True,
-    )
-    def workspace_subfolder_content(
-        workspace_name: str, subfolder_name: str
-    ) -> ToolSuccess[list[str] | None]:
-        from wa.workspace.tools.list import list_workspace_subfolder_content
+            elif method == "read":
+                if len(folder_name) > 0:
+                    folder = read_workspace_folder(
+                        workspace_folder_name=folder_name,
+                        workspace_name=workspace_name,
+                        include_files=include_files,
+                    )
+                    return tool_success(folder)
+                else:
+                    workspace = read_workspace(workspace_name=workspace_name)
+                    return tool_success(workspace)
 
-        return tool_success(
-            list_workspace_subfolder_content(workspace_name, subfolder_name)
-        )
+            elif method == "delete":
+                workspace_path = delete_workspace(
+                    workspace_name=workspace_name,
+                    force=force,
+                )
+                return tool_success(workspace_path)
 
-    _ = (workspaces, workspace_subfolders, workspace_subfolder_content)
+            else:
+                return tool_error(
+                    f"Unknown method: {method}.",
+                    "UNKNOWN_METHOD",
+                    workspace_name=workspace_name,
+                    exception_type=type(e).__name__,
+                )
 
-    @app.tool(
-        title="Create Workspace Subfolder",
-        description="Creates and registers a subfolder for a specific workspace",
-        structured_output=True,
-    )
-    def workspace_subfolder_create(
-        workspace_name: str, subfolder_name: str, force: bool = False
-    ) -> ToolSuccess[Workspace | None]:
-        from wa.workspace.tools.create import create_workspace_subfolder
+        except PermissionError as e:
+            return tool_error(
+                "Encountered permission error with workspace folder management.",
+                "PERMISSION_DENIED",
+                workspace_name=workspace_name,
+                exception_type=type(e).__name__,
+            )
+        except FileExistsError as e:
+            return tool_error(
+                f"Files exist within workspace {workspace_name}, try again with `force` if you intend to overwrite or delete.",
+                "FILE_EXISTS",
+                workspace_name=workspace_name,
+                exception_type=type(e).__name__,
+            )
+        except FileNotFoundError as e:
+            return tool_error(
+                f"File or folder within workspace {workspace_name} was not found.",
+                "FILE_NOT_FOUND",
+                workspace_name=workspace_name,
+                exception_type=type(e).__name__,
+            )
+        except Exception as e:
+            return tool_error(
+                "Workspace folder management operation failed",
+                "WORKSPACE_FOLDER_FAILED",
+                workspace_name=workspace_name,
+                exception_type=type(e).__name__,
+                exception_message=str(e),
+            )
 
-        return tool_success(
-            create_workspace_subfolder(workspace_name, subfolder_name, force=force)
-        )
-
-    _ = (
-        workspaces,
-        workspace_subfolders,
-        workspace_subfolder_content,
-        workspace_subfolder_create,
-    )
+    _ = workspace_management
