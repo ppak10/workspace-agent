@@ -11,18 +11,22 @@ def register_read(app: typer.Typer):
         workspace_name: str,
         folder_name: Annotated[list[str], typer.Argument()] = [],
         workspaces_path: Path | None = None,
+        include_files: Annotated[
+            bool, typer.Option("--files", help="Include list of files in the folder")
+        ] = False,
     ) -> None:
         """Read the contents workspace folder and its associated subfolders."""
         from wa.workspace.read import read_workspace, read_workspace_folder
 
         if len(folder_name) > 0:
             try:
-                subfolder = read_workspace_folder(
+                folder = read_workspace_folder(
                     workspace_folder_name=folder_name,
                     workspace_name=workspace_name,
                     workspaces_path=workspaces_path,
+                    include_files=include_files,
                 )
-                rprint(subfolder)
+                rprint(folder)
             except FileNotFoundError as e:
                 rprint(e)
             except:

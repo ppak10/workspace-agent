@@ -46,6 +46,8 @@ class WorkspaceFolder(WorkspaceModel):
     Recursive Folder class.
     """
 
+    files: list[str] = Field(default_factory=list)
+
     def initialize(self, force: bool = False):
         self.path.mkdir(exist_ok=force)
         for name, folder in self.folders.items():

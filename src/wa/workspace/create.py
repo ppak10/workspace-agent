@@ -46,11 +46,22 @@ def create_workspace_folder(
     """
     Create workspace subfolder class object and folder.
     """
+    if workspaces_path is None:
+        workspaces_path = get_project_root() / "workspaces"
 
-    workspace = read_workspace(
-        workspace_name=workspace_name,
-        workspaces_path=workspaces_path,
-    )
+    workspace_path = workspaces_path / workspace_name
+
+    # Creates workspace if not existant.
+    if not workspace_path.exists():
+        workspace = create_workspace(
+            workspace_name=workspace_name,
+            workspaces_path=workspaces_path,
+        )
+    else:
+        workspace = read_workspace(
+            workspace_name=workspace_name,
+            workspaces_path=workspaces_path,
+        )
 
     if isinstance(workspace_folder_name, str):
         workspace_folder = WorkspaceFolder(name=workspace_folder_name, **kwargs)

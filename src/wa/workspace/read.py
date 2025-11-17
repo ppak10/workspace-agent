@@ -40,6 +40,7 @@ def read_workspace_folder(
     workspace_folder_name: str | list[str],
     workspace_name: str,
     workspaces_path: Path | None = None,
+    include_files: bool = False,
 ) -> WorkspaceFolder:
     """
     Loads workspace folder config file and returns Workspace object.
@@ -56,7 +57,7 @@ def read_workspace_folder(
                 f"Workspace subfolder `{workspace_folder_name}` not found in workspace."
             )
 
-        return workspace.folders[workspace_folder_name]
+        folder = workspace.folders[workspace_folder_name]
 
     elif isinstance(workspace_folder_name, list):
 
@@ -80,4 +81,8 @@ def read_workspace_folder(
                     )
                 folder = folder.folders[folder_name]
 
-        return folder
+    # Populate files if requested
+    if include_files and folder.path.exists():
+        folder.files = [f.name for f in folder.path.iterdir() if f.is_file()]
+
+    return folder

@@ -273,14 +273,28 @@ class TestCreateWorkspaceFolder:
         assert (base_path / "parent" / "child1").exists()
         assert (base_path / "parent" / "child2").exists()
 
-    def test_create_workspace_folder_nonexistent_workspace_raises_error(self, tmp_path):
-        """Test that creating a folder in nonexistent workspace raises error."""
-        with pytest.raises(FileNotFoundError):
-            create_workspace_folder(
-                workspace_folder_name="folder",
-                workspace_name="nonexistent",
-                workspaces_path=tmp_path / "workspaces",
-            )
+    def test_create_workspace_folder_nonexistent_workspace_creates_workspace(
+        self, tmp_path
+    ):
+        """Test that creating a folder in nonexistent workspace auto-creates the workspace."""
+        workspaces_path = tmp_path / "workspaces"
+        workspace_path = workspaces_path / "nonexistent"
+
+        # Verify workspace doesn't exist
+        assert not workspace_path.exists()
+
+        # Create folder in nonexistent workspace
+        folder = create_workspace_folder(
+            workspace_folder_name="folder",
+            workspace_name="nonexistent",
+            workspaces_path=workspaces_path,
+        )
+
+        # Verify workspace and folder were created
+        assert workspace_path.exists()
+        assert (workspace_path / "folder").exists()
+        assert folder.name == "folder"
+        assert folder.path == workspace_path / "folder"
 
     def test_create_workspace_folder_single_item_list(self, tmp_path):
         """Test that create_workspace_folder handles single-item list."""
