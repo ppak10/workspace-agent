@@ -7,13 +7,13 @@ def uninstall(client: str) -> None:
     cmd = None
     match client:
         case "claude-code":
-            cmd = ["claude", "mcp", "remove", "wa"]
+            cmd = ["claude", "mcp", "remove", "workspace"]
 
         case "gemini-cli":
-            cmd = ["gemini", "mcp", "remove", "wa"]
+            cmd = ["gemini", "mcp", "remove", "workspace"]
 
         case "codex":
-            cmd = ["codex", "mcp", "remove", "wa"]
+            cmd = ["codex", "mcp", "remove", "workspace"]
 
         case _:
             rprint("[yellow]No client provided.[/yellow]\n")
