@@ -1,6 +1,6 @@
 [project]
 name = "workspace-agent"
-version = "0.0.2"
+version = "0.1.0"
 description = "Workspace management package for `workspaces` folder shared between different packages."
 readme = "README.md"
 requires-python = ">=3.10"
