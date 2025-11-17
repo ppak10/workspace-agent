@@ -52,10 +52,12 @@ jobs:
 
     - name: Uninstall MCP server (Default)
       run: |
+        source .venv/bin/activate
         workspace mcp uninstall
 
     - name: Install MCP server to Claude Code
       run: |
+        source .venv/bin/activate
         workspace mcp install claude-code --dev
 
     - name: Verify workspace MCP installation
@@ -64,4 +66,5 @@ jobs:
 
     - name: Uninstall MCP server Claude Code
       run: |
+        source .venv/bin/activate
         workspace mcp uninstall claude-code
