@@ -7,8 +7,7 @@ def register_mcp_uninstall(app: typer.Typer):
     @app.command(name="uninstall")
     def mcp_uninstall(
         client: Annotated[
-            str,
-            typer.Option("--client", help="Target client to install for."),
+            str, typer.Argument(help="Target client to uninstall.")
         ] = "claude-code",
     ) -> None:
         from wa.mcp.uninstall import uninstall
