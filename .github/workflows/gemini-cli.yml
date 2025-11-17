@@ -44,7 +44,7 @@ jobs:
     - name: Install MCP server to Gemini CLI
       run: |
         source .venv/bin/activate
-        workspace mcp install --dev --client gemini-cli
+        workspace mcp install gemini-cli --dev
 
     - name: Verify workspace MCP installation
       run: |

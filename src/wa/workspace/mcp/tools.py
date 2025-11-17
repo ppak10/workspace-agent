@@ -3,7 +3,7 @@ from mcp.server import FastMCP
 from pathlib import Path
 from typing import Literal, Union
 
-Method = Literal["create", "read", "delete"]
+Method = Literal["list", "create", "read"]
 
 
 def register_workspace_tools(app: FastMCP):
@@ -13,13 +13,13 @@ def register_workspace_tools(app: FastMCP):
 
     @app.tool(
         title="Workspace Management",
-        description="List all workspace folders or create, read, and delete a given workspace",
+        description="List all workspace folders or create and read a given workspace",
         structured_output=True,
     )
     def workspace_management(
         workspace_name: str | None = None,
         folder_name: list[str] = [],
-        method: Method = "read",
+        method: Method = "list",
         include_files: bool = False,
         force: bool = False,
     ) -> Union[
@@ -31,60 +31,71 @@ def register_workspace_tools(app: FastMCP):
         Args:
             workspace_name: Folder name of workspace, lists all workspace folders if left empty.
             folder_name: List of folder names, ordered by path heirarchy.
-            method: Either 'create', 'read', or 'delete'. Requires 'workspace_name' to be provided.
+            method: Either 'list', 'create', or 'read'. Requires 'workspace_name' to be provided.
             include_files: Include file names for 'read' method for workspace folder.
             force: Utilized for either 'create' or 'delete methods.
         """
         from wa.workspace.list import list_workspaces
         from wa.workspace.create import create_workspace, create_workspace_folder
         from wa.workspace.read import read_workspace, read_workspace_folder
-        from wa.workspace.delete import delete_workspace
+
+        # from wa.workspace.delete import delete_workspace
 
         try:
-            if workspace_name is None:
+            if method == "list":
+                # if workspace_name is None:
                 workspace_folder_names = list_workspaces()
                 return tool_success(workspace_folder_names)
 
-            elif method == "create":
-                if len(folder_name) > 0:
-                    folder = create_workspace_folder(
-                        workspace_folder_name=folder_name,
-                        workspace_name=workspace_name,
-                        force=force,
-                    )
-                    return tool_success(folder)
+            if workspace_name is not None:
+                if method == "create":
+                    if len(folder_name) > 0:
+                        folder = create_workspace_folder(
+                            workspace_folder_name=folder_name,
+                            workspace_name=workspace_name,
+                            force=force,
+                        )
+                        return tool_success(folder)
+                    else:
+                        workspace = create_workspace(
+                            workspace_name=workspace_name,
+                            force=force,
+                        )
+                        return tool_success(workspace)
+
+                elif method == "read":
+                    if len(folder_name) > 0:
+                        folder = read_workspace_folder(
+                            workspace_folder_name=folder_name,
+                            workspace_name=workspace_name,
+                            include_files=include_files,
+                        )
+                        return tool_success(folder)
+                    else:
+                        workspace = read_workspace(workspace_name=workspace_name)
+                        return tool_success(workspace)
+
+                # TODO: Turn back on when granular delete is implemented
+                # Also needs for the update method to be implement to know which
+                # folders have been deleted.
+                # elif method == "delete":
+                #     workspace_path = delete_workspace(
+                #         workspace_name=workspace_name,
+                #         force=force,
+                #     )
+                #     return tool_success(workspace_path)
+
                 else:
-                    workspace = create_workspace(
+                    return tool_error(
+                        f"Unknown method: {method}.",
+                        "UNKNOWN_METHOD",
                         workspace_name=workspace_name,
-                        force=force,
                     )
-                    return tool_success(workspace)
-
-            elif method == "read":
-                if len(folder_name) > 0:
-                    folder = read_workspace_folder(
-                        workspace_folder_name=folder_name,
-                        workspace_name=workspace_name,
-                        include_files=include_files,
-                    )
-                    return tool_success(folder)
-                else:
-                    workspace = read_workspace(workspace_name=workspace_name)
-                    return tool_success(workspace)
-
-            elif method == "delete":
-                workspace_path = delete_workspace(
-                    workspace_name=workspace_name,
-                    force=force,
-                )
-                return tool_success(workspace_path)
-
             else:
                 return tool_error(
-                    f"Unknown method: {method}.",
-                    "UNKNOWN_METHOD",
+                    f"Workspace name not provided.",
+                    "INVALID_WORKSPACE_NAME",
                     workspace_name=workspace_name,
-                    exception_type=type(e).__name__,
                 )
 
         except PermissionError as e:

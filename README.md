@@ -18,27 +18,79 @@
 uv add workspace-agent 
 ```
 
-### Agent
-#### Claude Code
-1. Install MCP tools and Agent
+## Usage
+### Command Line Interface (CLI)
+1. Create Workspace (along with folders and subfolders)
 ```bash
-workspace mcp install
+> workspace create test-workspace
+
+# Expected Output
+✅ Workspace created at: /Users/ppak/GitHub/workspace-agent/workspaces/test-workspace
+
+> workspace create test-workspace test-folder
+
+# Expected Output
+✅ Workspace folder created at: /Users/ppak/GitHub/workspace-agent/workspaces/test-workspace/test-folder
+
+> workspace create test-workspace test-folder test-subfolder
+
+# Expected Output
+✅ Workspace folder created at: /Users/ppak/GitHub/workspace-agent/workspaces/test-workspace/test-folder/test-subfolder
 ```
 
-- Defaults to claude code but other options include `codex` and `gemini-cli`
+2. Read Workspace
 ```bash
-workspace mcp install --client claude-code
-workspace mcp install --client codex
-workspace mcp install --client gemini-cli 
+> workspace read test-workspace
+
+# Expected Output
+Workspace(
+    name='test-workspace',
+    path=PosixPath('/Users/ppak/GitHub/workspace-agent/workspaces/test-workspace'),
+    folders={
+        'test-folder': WorkspaceFolder(
+            name='test-folder',
+            path=PosixPath('/Users/ppak/GitHub/workspace-agent/workspaces/test-workspace/test-folder'),
+            folders={'test-subfolder': WorkspaceFolder(name='test-subfolder', path=PosixPath('/Users/ppak/GitHub/workspace-agent/workspaces/test-workspace/test-folder/test-subfolder'), folders={}, files=[])},
+            files=[]
+        )
+    },
+    version='0.0.2',
+    workspaces_path=PosixPath('/Users/ppak/GitHub/workspace-agent/workspaces'),
+    config_file='workspace.json'
+)
+
+> workspace read test-workspace test-folder
+
+# Expected Output
+WorkspaceFolder(
+    name='test-folder',
+    path=PosixPath('/Users/ppak/GitHub/workspace-agent/workspaces/test-workspace/test-folder'),
+    folders={'test-subfolder': WorkspaceFolder(name='test-subfolder', path=PosixPath('/Users/ppak/GitHub/workspace-agent/workspaces/test-workspace/test-folder/test-subfolder'), folders={}, files=[])},
+    files=[]
+)
+
+> workspace read test-workspace test-folder test-subfolder
+
+# Expected Output
+WorkspaceFolder(name='test-subfolder', path=PosixPath('/Users/ppak/GitHub/workspace-agent/workspaces/test-workspace/test-folder/test-subfolder'), folders={}, files=[])
 ```
+
+### Model Context Protocol (MCP)
+1. Install MCP tools and Agent (defaults to `claude-code`)
+```bash
+> workspace mcp install
+```
+
+- Explicit methods include `claude-code`, `codex`, and `gemini-cli`
+  ```bash
+  > workspace mcp install claude-code
+  > workspace mcp install codex
+  > workspace mcp install gemini-cli 
+  ```
 
 - If updating, you will need to remove the previously existing MCP tools
-```bash
-workspace mcp uninstall
-```
-
-```bash
-workspace mcp uninstall --client claude-code
-workspace mcp uninstall --client codex
-workspace mcp uninstall --client gemini-cli 
-```
+  ```bash
+  > workspace mcp uninstall claude-code
+  > workspace mcp uninstall codex
+  > workspace mcp uninstall gemini-cli 
+  ```

@@ -44,7 +44,7 @@ jobs:
     - name: Install MCP server to Codex CLI
       run: |
         source .venv/bin/activate
-        workspace mcp install --dev --client codex
+        workspace mcp install codex --dev
 
     - name: Verify workspace MCP installation
       run: |
