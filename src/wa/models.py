@@ -12,45 +12,45 @@ from wa.utils import create_pathname
 class WorkspaceModel(BaseModel):
     name: str
     path: Path = Path("")
-    subfolders: dict[str, WorkspaceSubfolder] = {}
+    folders: dict[str, WorkspaceFolder] = {}
 
     @field_validator("name", mode="before")
     @classmethod
     def normalize_and_sanitize_name(cls, name: str) -> str:
         return create_pathname(name)
 
-    @field_validator("subfolders", mode="before")
+    @field_validator("folders", mode="before")
     @classmethod
-    def parse_subfolders(cls, v):
-        """Convert list of WorkspaceSubfolder objects to dict keyed by name."""
+    def parse_folders(cls, v):
+        """Convert list of WorkspaceFolder objects to dict keyed by name."""
         if isinstance(v, dict):
             return v
 
         if isinstance(v, list):
             result = {}
-            for subfolder in v:
-                if isinstance(subfolder, WorkspaceSubfolder):
-                    result[subfolder.name] = subfolder
-                elif isinstance(subfolder, dict):
-                    result[subfolder["name"]] = subfolder
-                elif isinstance(subfolder, str):
-                    result[subfolder] = WorkspaceSubfolder(name=subfolder)
+            for folder in v:
+                if isinstance(folder, WorkspaceFolder):
+                    result[folder.name] = folder
+                elif isinstance(folder, dict):
+                    result[folder["name"]] = folder
+                elif isinstance(folder, str):
+                    result[folder] = WorkspaceFolder(name=folder)
             return result
 
         else:
             return {}
 
 
-class WorkspaceSubfolder(WorkspaceModel):
+class WorkspaceFolder(WorkspaceModel):
     """
-    Recursive subfolder class.
+    Recursive Folder class.
     """
 
     def initialize(self, force: bool = False):
         self.path.mkdir(exist_ok=force)
-        for name, subfolder in self.subfolders.items():
-            subfolder.path = self.path / name
-            subfolder.initialize(force=force)
+        for name, folder in self.folders.items():
+            folder.path = self.path / name
+            folder.initialize(force=force)
 
 
 class Workspace(WorkspaceModel):
@@ -59,84 +59,82 @@ class Workspace(WorkspaceModel):
     """
 
     version: str = Field(default_factory=lambda: __version__)
-    workspaces_folder_path: Path = Path("")
+    workspaces_path: Path = Path("")
     config_file: str = "workspace.json"
 
     @model_validator(mode="after")
     def populate_missing_paths(self) -> "Workspace":
-        if not self.workspaces_folder_path:
-            self.workspaces_folder_path = get_project_root() / "workspaces"
+        if not self.workspaces_path:
+            self.workspaces_path = get_project_root() / "workspaces"
 
         if self.path == Path(""):
-            self.path = self.workspaces_folder_path / self.name
+            self.path = self.workspaces_path / self.name
 
         return self
 
-    def _merge_subfolders(
+    def _merge_folders(
         self,
-        existing: WorkspaceSubfolder,
-        new: WorkspaceSubfolder,
+        existing: WorkspaceFolder,
+        new: WorkspaceFolder,
         force: bool = False,
     ) -> None:
         """
-        Recursively merge new subfolder structure into existing subfolder.
+        Recursively merge new folder structure into existing folder.
 
         Args:
-            existing: The existing WorkspaceSubfolder to merge into.
-            new: The new WorkspaceSubfolder to merge from.
+            existing: The existing WorkspaceFolder to merge into.
+            new: The new WorkspaceFolder to merge from.
             force: Whether to overwrite existing folders.
         """
         # Merge the nested subfolders from new into existing
-        for index, (name, new_nested) in enumerate(new.subfolders.items()):
-            if name in existing.subfolders:
+        for index, (name, new_nested) in enumerate(new.folders.items()):
+            if name in existing.folders:
                 # Recursively merge if nested subfolder already exists
                 # TODO: Add in overwrite check.
-                self._merge_subfolders(
-                    existing.subfolders[name], new_nested, force=force
-                )
+                self._merge_folders(existing.folders[name], new_nested, force=force)
             else:
                 # Add the new nested subfolder
                 new_nested.path = existing.path / name
                 new_nested.initialize(force=force)
-                existing.subfolders[name] = new_nested
+                existing.folders[name] = new_nested
 
-    def initialize_subfolder(
+    def initialize_folder(
         self,
-        subfolder: WorkspaceSubfolder,
+        folder: WorkspaceFolder,
         force: bool = False,
-    ) -> WorkspaceSubfolder:
+    ) -> WorkspaceFolder:
         """
-        Assigns path to subfolder and initializes subfolder inside workspace.
-        If a subfolder with the same name already exists, merges the nested subfolders.
+        Assigns path to folder and initializes folder inside workspace.
+        If a folder with the same name already exists, merges the nested folders.
 
         Args:
-            subfolder: Workspace subfolder object.
-            force: Overwrite existing subfolder.
+            folder: Workspace folder object.
+            force: Overwrite existing folder.
 
         Returns:
-            Path: The path of the created subfolder (deepest nested path if nested).
+            Path: The path of the created folder (deepest nested path if nested).
         """
-        # Check if this top-level subfolder already exists
-        if subfolder.name in self.subfolders:
-            existing = self.subfolders[subfolder.name]
+        # Check if this top-level folder already exists
+        if folder.name in self.folders:
+            existing = self.folders[folder.name]
             # Merge the new subfolders into the existing subfolder
-            self._merge_subfolders(existing, subfolder, force=force)
+            self._merge_folders(existing, folder, force=force)
         else:
-            subfolder.path = self.path / subfolder.name
-            subfolder.initialize(force=force)
-            self.subfolders[subfolder.name] = subfolder
+            folder.path = self.path / folder.name
+            folder.initialize(force=force)
+            self.folders[folder.name] = folder
 
         self.save()
 
         # Return the deepest nested path
-        def get_deepest_subfolder(subfolder: WorkspaceSubfolder) -> WorkspaceSubfolder:
-            if subfolder.subfolders:
+        def get_deepest_folder(folder: WorkspaceFolder) -> WorkspaceFolder:
+            if folder.folders:
                 # Get the first (and should be only) nested subfolder
-                nested = next(iter(subfolder.subfolders.values()))
-                return get_deepest_subfolder(nested)
-            return subfolder
+                nested = next(iter(folder.folders.values()))
+                return get_deepest_folder(nested)
+            return folder
 
-        return get_deepest_subfolder(subfolder)
+        return get_deepest_folder(folder)
 
     def save(self, path: Path | None = None) -> Path:
         """

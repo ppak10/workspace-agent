@@ -1,388 +1,340 @@
-"""Tests for Workspace model."""
+from __future__ import annotations
 
+import json
+import tempfile
 from pathlib import Path
 
 import pytest
 
-from wa.models import Workspace, WorkspaceSubfolder
+from wa import __version__
+from wa.models import Workspace, WorkspaceFolder, WorkspaceModel
 
 
 class TestWorkspaceModel:
-    """Test cases for the Workspace model."""
+    """Test the base WorkspaceModel class."""
 
-    def test_workspace_creation_with_minimal_fields(self):
-        """Test creating a workspace with only required fields."""
-        workspace = Workspace(name="test")
+    def test_name_sanitization(self):
+        """Test that names are sanitized properly."""
+        model = WorkspaceModel(name="My Test Workspace")
+        assert model.name == "My_Test_Workspace"
 
-        assert workspace.name == "test"
-        assert workspace.version  # Should have a default version
-        assert workspace.subfolders == {}
-        assert workspace.config_file == "workspace.json"
+    def test_name_removes_invalid_characters(self):
+        """Test that invalid characters are removed from names."""
+        model = WorkspaceModel(name='invalid<>:"/\\|?*chars')
+        assert model.name == "invalidchars"
 
-    def test_workspace_name_normalization_spaces(self):
-        """Test that spaces in names are converted to underscores."""
-        workspace = Workspace(name="my test workspace")
-
-        assert workspace.name == "my_test_workspace"
-
-    def test_workspace_name_sanitization_invalid_chars(self):
-        """Test that invalid characters are removed from workspace name."""
-        # Test all invalid characters: < > : " / \ | ? * and control chars
-        workspace = Workspace(name='test<>:"/\\|?*name')
-
-        assert workspace.name == "testname"
-
-    def test_workspace_name_sanitization_control_chars(self):
-        """Test that control characters (0x00-0x1F) are removed."""
-        workspace = Workspace(name="test\x00\x01\x1Fname")
-
-        assert workspace.name == "testname"
-
-    def test_workspace_name_truncation(self):
-        """Test that workspace names are truncated to 255 characters."""
+    def test_name_truncates_long_names(self):
+        """Test that names longer than 255 characters are truncated."""
         long_name = "a" * 300
-        workspace = Workspace(name=long_name)
+        model = WorkspaceModel(name=long_name)
+        assert len(model.name) == 255
 
-        assert len(workspace.name) == 255
-        assert workspace.name == "a" * 255
+    def test_folders_dict_format(self):
+        """Test that folders can be provided as a dict."""
+        folders = {
+            "folder1": WorkspaceFolder(name="folder1"),
+            "folder2": WorkspaceFolder(name="folder2"),
+        }
+        model = WorkspaceModel(name="test", folders=folders)
+        assert len(model.folders) == 2
+        assert "folder1" in model.folders
+        assert "folder2" in model.folders
 
-    def test_workspace_name_combined_sanitization(self):
-        """Test that both space normalization and sanitization work together."""
-        workspace = Workspace(name="my test<name>with:invalid/chars")
+    def test_folders_list_of_workspace_folder_objects(self):
+        """Test that folders can be provided as a list of WorkspaceFolder objects."""
+        folders = [
+            WorkspaceFolder(name="folder1"),
+            WorkspaceFolder(name="folder2"),
+        ]
+        model = WorkspaceModel(name="test", folders=folders)
+        assert len(model.folders) == 2
+        assert "folder1" in model.folders
+        assert "folder2" in model.folders
+        assert isinstance(model.folders["folder1"], WorkspaceFolder)
 
-        assert workspace.name == "my_testnamewithinvalidchars"
+    def test_folders_list_of_dicts(self):
+        """Test that folders can be provided as a list of dicts."""
+        folders = [
+            {"name": "folder1"},
+            {"name": "folder2"},
+        ]
+        model = WorkspaceModel(name="test", folders=folders)
+        assert len(model.folders) == 2
+        assert "folder1" in model.folders
+        assert "folder2" in model.folders
 
-    def test_populate_missing_paths_custom_workspaces_folder(self, tmp_path: Path):
-        """Test that custom workspaces_folder_path is preserved."""
-        custom_path = tmp_path / "custom_workspaces"
-        workspace = Workspace(
-            name="test",
-            workspaces_folder_path=custom_path,
+    def test_folders_list_of_strings(self):
+        """Test that folders can be provided as a list of strings."""
+        folders = ["folder1", "folder2"]
+        model = WorkspaceModel(name="test", folders=folders)
+        assert len(model.folders) == 2
+        assert "folder1" in model.folders
+        assert "folder2" in model.folders
+        assert isinstance(model.folders["folder1"], WorkspaceFolder)
+
+    def test_folders_empty_by_default(self):
+        """Test that folders default to an empty dict."""
+        model = WorkspaceModel(name="test")
+        assert model.folders == {}
+
+    def test_folders_invalid_format_returns_empty(self):
+        """Test that invalid folder formats return an empty dict."""
+        model = WorkspaceModel(name="test", folders="invalid")
+        assert model.folders == {}
+
+
+class TestWorkspaceFolder:
+    """Test the WorkspaceFolder class."""
+
+    def test_initialize_creates_directory(self, tmp_path):
+        """Test that initialize creates the folder directory."""
+        folder = WorkspaceFolder(name="test_folder", path=tmp_path / "test_folder")
+        folder.initialize()
+        assert folder.path.exists()
+        assert folder.path.is_dir()
+
+    def test_initialize_with_nested_folders(self, tmp_path):
+        """Test that initialize creates nested folder structures."""
+        folder = WorkspaceFolder(
+            name="parent",
+            path=tmp_path / "parent",
+            folders=[
+                WorkspaceFolder(name="child1"),
+                WorkspaceFolder(name="child2"),
+            ],
         )
+        folder.initialize()
+        assert folder.path.exists()
+        assert (folder.path / "child1").exists()
+        assert (folder.path / "child2").exists()
 
-        assert workspace.workspaces_folder_path == custom_path
-
-    def test_populate_missing_paths_workspace_path(self, tmp_path: Path):
-        """Test that workspace path is populated based on name and workspaces_folder_path."""
-        workspaces_folder = tmp_path / "workspaces"
-        workspace = Workspace(
-            name="test",
-            workspaces_folder_path=workspaces_folder,
+    def test_initialize_deeply_nested_folders(self, tmp_path):
+        """Test that initialize creates deeply nested folder structures."""
+        folder = WorkspaceFolder(
+            name="root",
+            path=tmp_path / "root",
+            folders=[
+                WorkspaceFolder(
+                    name="level1",
+                    folders=[
+                        WorkspaceFolder(
+                            name="level2",
+                            folders=[WorkspaceFolder(name="level3")],
+                        )
+                    ],
+                )
+            ],
         )
+        folder.initialize()
+        assert (tmp_path / "root" / "level1" / "level2" / "level3").exists()
 
-        assert workspace.path == workspaces_folder / "test"
+    def test_initialize_with_force_on_existing_directory(self, tmp_path):
+        """Test that initialize with force=True works on existing directories."""
+        folder_path = tmp_path / "existing"
+        folder_path.mkdir()
+        folder = WorkspaceFolder(name="existing", path=folder_path)
+        folder.initialize(force=True)
+        assert folder_path.exists()
 
-    def test_populate_missing_paths_custom_workspace_path(self, tmp_path: Path):
-        """Test that custom workspace path is preserved."""
-        custom_path = tmp_path / "custom" / "path"
+    def test_initialize_without_force_on_existing_directory_raises_error(
+        self, tmp_path
+    ):
+        """Test that initialize without force raises error on existing directories."""
+        folder_path = tmp_path / "existing"
+        folder_path.mkdir()
+        folder = WorkspaceFolder(name="existing", path=folder_path)
+        with pytest.raises(FileExistsError):
+            folder.initialize(force=False)
+
+
+class TestWorkspace:
+    """Test the Workspace class."""
+
+    def test_default_version(self):
+        """Test that workspace has the correct default version."""
+        workspace = Workspace(name="test")
+        assert workspace.version == __version__
+
+    def test_path_population(self, tmp_path):
+        """Test that workspace path is populated automatically."""
         workspace = Workspace(
-            name="test",
-            path=custom_path,
+            name="test_workspace", workspaces_path=tmp_path / "workspaces"
         )
+        assert workspace.workspaces_path == tmp_path / "workspaces"
+        assert workspace.path == tmp_path / "workspaces" / "test_workspace"
 
+    def test_custom_workspaces_path(self, tmp_path):
+        """Test that custom workspaces_path is respected."""
+        custom_path = tmp_path / "custom"
+        workspace = Workspace(name="test", workspaces_path=custom_path)
+        assert workspace.workspaces_path == custom_path
+        assert workspace.path == custom_path / "test"
+
+    def test_custom_path(self, tmp_path):
+        """Test that custom path is respected."""
+        custom_path = tmp_path / "my_workspace"
+        workspace = Workspace(name="test", path=custom_path)
         assert workspace.path == custom_path
 
-    def test_save_creates_config_file(self, tmp_path: Path):
-        """Test that save() creates a config file."""
+    def test_save_creates_json_file(self, tmp_path):
+        """Test that save creates a JSON configuration file."""
         workspace = Workspace(
             name="test",
-            workspaces_folder_path=tmp_path,
+            path=tmp_path / "test",
+            workspaces_path=tmp_path,
         )
-
         config_path = workspace.save()
-
         assert config_path.exists()
         assert config_path.name == "workspace.json"
         assert config_path.parent == workspace.path
 
-    def test_save_creates_parent_directories(self, tmp_path: Path):
-        """Test that save() creates parent directories if they don't exist."""
-        workspaces_folder = tmp_path / "nested" / "workspaces"
+    def test_save_content_is_valid_json(self, tmp_path):
+        """Test that saved file contains valid JSON."""
         workspace = Workspace(
             name="test",
-            workspaces_folder_path=workspaces_folder,
+            path=tmp_path / "test",
+            workspaces_path=tmp_path,
         )
-
-        assert not workspace.path.exists()
-
         config_path = workspace.save()
+        data = json.loads(config_path.read_text())
+        assert data["name"] == "test"
+        assert data["version"] == __version__
 
-        assert workspace.path.exists()
-        assert config_path.exists()
-
-    def test_save_with_custom_path(self, tmp_path: Path):
-        """Test that save() can save to a custom path."""
-        workspace = Workspace(
-            name="test",
-            workspaces_folder_path=tmp_path,
-        )
-
-        custom_path = tmp_path / "custom_config.json"
-        config_path = workspace.save(path=custom_path)
-
-        assert config_path == custom_path
+    def test_save_custom_path(self, tmp_path):
+        """Test that save can use a custom path."""
+        workspace = Workspace(name="test", path=tmp_path / "test")
+        custom_path = tmp_path / "custom" / "config.json"
+        saved_path = workspace.save(path=custom_path)
+        assert saved_path == custom_path
         assert custom_path.exists()
 
-    def test_save_content_is_valid_json(self, tmp_path: Path):
-        """Test that saved content is valid JSON with correct fields."""
+    def test_load_workspace(self, tmp_path):
+        """Test that workspace can be loaded from file."""
         workspace = Workspace(
             name="test",
-            workspaces_folder_path=tmp_path,
-            subfolders=[
-                WorkspaceSubfolder(name="data"),
-                WorkspaceSubfolder(name="models"),
-            ],
+            path=tmp_path / "test",
+            workspaces_path=tmp_path,
         )
-
         config_path = workspace.save()
-        content = config_path.read_text()
+        loaded = Workspace.load(config_path)
+        assert loaded.name == "test"
+        assert loaded.version == __version__
+        assert loaded.path == Path(tmp_path / "test")
 
-        assert '"name": "test"' in content
-        assert '"subfolders"' in content
-        assert '"data"' in content
-        assert '"models"' in content
-
-    def test_load_existing_workspace(self, tmp_path: Path):
-        """Test loading an existing workspace from config file."""
-        # Create and save a workspace
-        original_workspace = Workspace(
-            name="test",
-            workspaces_folder_path=tmp_path,
-            subfolders=[
-                WorkspaceSubfolder(name="data"),
-                WorkspaceSubfolder(name="models"),
-            ],
-        )
-        config_path = original_workspace.save()
-
-        # Load it back
-        loaded_workspace = Workspace.load(config_path)
-
-        assert loaded_workspace.name == original_workspace.name
-        assert (
-            loaded_workspace.subfolders.keys() == original_workspace.subfolders.keys()
-        )
-        assert loaded_workspace.config_file == original_workspace.config_file
-
-    def test_load_nonexistent_file_raises_error(self, tmp_path: Path):
+    def test_load_nonexistent_file_raises_error(self, tmp_path):
         """Test that loading a nonexistent file raises FileNotFoundError."""
-        nonexistent_path = tmp_path / "nonexistent.json"
-
         with pytest.raises(FileNotFoundError, match="Workspace file not found"):
-            Workspace.load(nonexistent_path)
+            Workspace.load(tmp_path / "nonexistent.json")
 
-    def test_workspace_with_all_fields(self, tmp_path: Path):
-        """Test creating a workspace with all fields specified."""
-        workspaces_folder = tmp_path / "workspaces"
-        workspace_path = workspaces_folder / "test"
+    def test_initialize_folder_creates_folder(self, tmp_path):
+        """Test that initialize_folder creates the folder."""
+        workspace = Workspace(name="test", path=tmp_path / "test")
+        workspace.path.mkdir(parents=True, exist_ok=True)
+        folder = WorkspaceFolder(name="new_folder")
+        result = workspace.initialize_folder(folder)
+        assert (tmp_path / "test" / "new_folder").exists()
+        assert "new_folder" in workspace.folders
 
-        workspace = Workspace(
-            name="test",
-            version="1.0.0",
-            path=workspace_path,
-            workspaces_folder_path=workspaces_folder,
-            subfolders=[
-                WorkspaceSubfolder(name="data"),
-                WorkspaceSubfolder(name="models"),
-                WorkspaceSubfolder(name="outputs"),
-            ],
-            config_file="custom_config.json",
-        )
-
-        assert workspace.name == "test"
-        assert workspace.version == "1.0.0"
-        assert workspace.path == workspace_path
-        assert workspace.workspaces_folder_path == workspaces_folder
-        assert set(workspace.subfolders.keys()) == {"data", "models", "outputs"}
-        assert workspace.config_file == "custom_config.json"
-
-    def test_workspace_save_and_load_roundtrip(self, tmp_path: Path):
-        """Test that a workspace can be saved and loaded without data loss."""
-        original = Workspace(
-            name="roundtrip_test",
-            workspaces_folder_path=tmp_path,
-            subfolders=[
-                WorkspaceSubfolder(name="data"),
-                WorkspaceSubfolder(name="models"),
-                WorkspaceSubfolder(name="outputs"),
+    def test_initialize_folder_returns_deepest_folder(self, tmp_path):
+        """Test that initialize_folder returns the deepest nested folder."""
+        workspace = Workspace(name="test", path=tmp_path / "test")
+        workspace.path.mkdir(parents=True, exist_ok=True)
+        folder = WorkspaceFolder(
+            name="parent",
+            folders=[
+                WorkspaceFolder(
+                    name="child",
+                    folders=[WorkspaceFolder(name="grandchild")],
+                )
             ],
         )
+        result = workspace.initialize_folder(folder)
+        assert result.name == "grandchild"
+        assert result.path == tmp_path / "test" / "parent" / "child" / "grandchild"
 
-        config_path = original.save()
-        loaded = Workspace.load(config_path)
+    def test_initialize_folder_merges_existing_folder(self, tmp_path):
+        """Test that initialize_folder merges into existing folders."""
+        workspace = Workspace(name="test", path=tmp_path / "test")
+        workspace.path.mkdir(parents=True, exist_ok=True)
+        # Create first folder with child1
+        folder1 = WorkspaceFolder(
+            name="parent",
+            folders=[WorkspaceFolder(name="child1")],
+        )
+        workspace.initialize_folder(folder1)
 
-        assert loaded.name == original.name
-        assert loaded.version == original.version
-        assert loaded.path == original.path
-        assert loaded.workspaces_folder_path == original.workspaces_folder_path
-        assert loaded.subfolders.keys() == original.subfolders.keys()
-        assert loaded.config_file == original.config_file
+        # Create second folder with child2 under same parent
+        folder2 = WorkspaceFolder(
+            name="parent",
+            folders=[WorkspaceFolder(name="child2")],
+        )
+        workspace.initialize_folder(folder2)
 
-    def test_workspace_empty_name_normalization(self):
-        """Test handling of edge case with empty or whitespace-only names."""
-        workspace = Workspace(name="   ")
+        # Both children should exist
+        assert (tmp_path / "test" / "parent" / "child1").exists()
+        assert (tmp_path / "test" / "parent" / "child2").exists()
+        assert len(workspace.folders["parent"].folders) == 2
 
-        assert workspace.name == "___"
+    def test_initialize_folder_saves_config(self, tmp_path):
+        """Test that initialize_folder saves the workspace configuration."""
+        workspace = Workspace(name="test", path=tmp_path / "test")
+        workspace.path.mkdir(parents=True, exist_ok=True)
+        folder = WorkspaceFolder(name="new_folder")
+        workspace.initialize_folder(folder)
+        config_path = tmp_path / "test" / "workspace.json"
+        assert config_path.exists()
 
-    def test_workspace_path_types(self, tmp_path: Path):
-        """Test that paths are properly converted to Path objects."""
+    def test_workspace_with_folders_save_and_load(self, tmp_path):
+        """Test that workspace with folders can be saved and loaded."""
         workspace = Workspace(
             name="test",
-            workspaces_folder_path=tmp_path,
+            path=tmp_path / "test",
+            workspaces_path=tmp_path,
+            folders=[
+                WorkspaceFolder(
+                    name="folder1",
+                    folders=[WorkspaceFolder(name="subfolder1")],
+                ),
+                WorkspaceFolder(name="folder2"),
+            ],
         )
-
-        assert isinstance(workspace.path, Path)
-        assert isinstance(workspace.workspaces_folder_path, Path)
-
-
-class TestWorkspaceSubfolderModel:
-    """Test cases for the WorkspaceSubfolder model."""
-
-    def test_subfolder_creation_minimal(self):
-        """Test creating a subfolder with only required fields."""
-        subfolder = WorkspaceSubfolder(name="docs")
-
-        assert subfolder.name == "docs"
-        assert subfolder.path == Path("")
-        assert subfolder.subfolders == {}
-
-    def test_subfolder_name_normalization_spaces(self):
-        """Test that spaces in subfolder names are converted to underscores."""
-        subfolder = WorkspaceSubfolder(name="my docs folder")
-
-        assert subfolder.name == "my_docs_folder"
-
-    def test_subfolder_name_sanitization_invalid_chars(self):
-        """Test that invalid characters are removed from subfolder name."""
-        subfolder = WorkspaceSubfolder(name='test<>:"/\\|?*name')
-
-        assert subfolder.name == "testname"
-
-    def test_subfolder_with_list_of_subfolders(self):
-        """Test creating a subfolder with a list of WorkspaceSubfolder objects."""
-        sub1 = WorkspaceSubfolder(name="code")
-        sub2 = WorkspaceSubfolder(name="tests")
-
-        parent = WorkspaceSubfolder(name="src", subfolders=[sub1, sub2])
-
-        assert isinstance(parent.subfolders, dict)
-        assert "code" in parent.subfolders
-        assert "tests" in parent.subfolders
-        assert parent.subfolders["code"] == sub1
-        assert parent.subfolders["tests"] == sub2
-
-    def test_subfolder_with_dict_of_subfolders(self):
-        """Test creating a subfolder with a dict of WorkspaceSubfolder objects."""
-        sub1 = WorkspaceSubfolder(name="code")
-        sub2 = WorkspaceSubfolder(name="tests")
-
-        parent = WorkspaceSubfolder(
-            name="src", subfolders={"code": sub1, "tests": sub2}
-        )
-
-        assert isinstance(parent.subfolders, dict)
-        assert parent.subfolders["code"] == sub1
-        assert parent.subfolders["tests"] == sub2
-
-    def test_subfolder_with_nested_subfolders_as_list(self):
-        """Test creating nested subfolders using list initialization."""
-        sub_sub = WorkspaceSubfolder(name="utils")
-        sub1 = WorkspaceSubfolder(name="lib", subfolders=[sub_sub])
-
-        parent = WorkspaceSubfolder(name="src", subfolders=[sub1])
-
-        assert parent.subfolders["lib"].subfolders["utils"] == sub_sub
-
-    def test_subfolder_access_by_name(self):
-        """Test that subfolders can be accessed by name after list initialization."""
-        docs = WorkspaceSubfolder(name="docs")
-        src = WorkspaceSubfolder(name="src")
-
-        workspace_subfolder = WorkspaceSubfolder(name="project", subfolders=[docs, src])
-
-        # Should be able to access by name
-        assert workspace_subfolder.subfolders["docs"].name == "docs"
-        assert workspace_subfolder.subfolders["src"].name == "src"
-
-
-class TestWorkspaceSubfoldersIntegration:
-    """Test cases for Workspace with WorkspaceSubfolder objects."""
-
-    def test_workspace_with_list_of_subfolder_objects(self):
-        """Test creating a workspace with a list of WorkspaceSubfolder objects."""
-        sub1 = WorkspaceSubfolder(name="data")
-        sub2 = WorkspaceSubfolder(name="models")
-
-        workspace = Workspace(name="test", subfolders=[sub1, sub2])
-
-        assert isinstance(workspace.subfolders, dict)
-        assert "data" in workspace.subfolders
-        assert "models" in workspace.subfolders
-        assert workspace.subfolders["data"] == sub1
-        assert workspace.subfolders["models"] == sub2
-
-    def test_workspace_with_dict_of_subfolder_objects(self):
-        """Test creating a workspace with a dict of WorkspaceSubfolder objects."""
-        sub1 = WorkspaceSubfolder(name="data")
-        sub2 = WorkspaceSubfolder(name="models")
-
-        workspace = Workspace(name="test", subfolders={"data": sub1, "models": sub2})
-
-        assert isinstance(workspace.subfolders, dict)
-        assert workspace.subfolders["data"] == sub1
-        assert workspace.subfolders["models"] == sub2
-
-    def test_workspace_subfolder_access_by_name(self):
-        """Test that workspace subfolders can be accessed by name."""
-        docs = WorkspaceSubfolder(name="documentation")
-        src = WorkspaceSubfolder(name="source")
-        tests = WorkspaceSubfolder(name="tests")
-
-        workspace = Workspace(name="my-project", subfolders=[docs, src, tests])
-
-        # Easy access by name
-        assert workspace.subfolders["documentation"].name == "documentation"
-        assert workspace.subfolders["source"].name == "source"
-        assert workspace.subfolders["tests"].name == "tests"
-
-    def test_workspace_with_nested_subfolder_structure(self):
-        """Test workspace with nested subfolder structure using list initialization."""
-        utils = WorkspaceSubfolder(name="utils")
-        components = WorkspaceSubfolder(name="components")
-        src = WorkspaceSubfolder(name="src", subfolders=[utils, components])
-
-        workspace = Workspace(name="app", subfolders=[src])
-
-        # Access nested structure by name
-        assert workspace.subfolders["src"].subfolders["utils"].name == "utils"
-        assert workspace.subfolders["src"].subfolders["components"].name == "components"
-
-    def test_workspace_save_and_load_with_subfolder_objects(self, tmp_path: Path):
-        """Test that workspace with WorkspaceSubfolder objects can be saved and loaded."""
-        sub1 = WorkspaceSubfolder(name="data")
-        sub2 = WorkspaceSubfolder(name="models")
-
-        original = Workspace(
-            name="test", workspaces_folder_path=tmp_path, subfolders=[sub1, sub2]
-        )
-
-        config_path = original.save()
+        config_path = workspace.save()
         loaded = Workspace.load(config_path)
+        assert len(loaded.folders) == 2
+        assert "folder1" in loaded.folders
+        assert "folder2" in loaded.folders
+        assert "subfolder1" in loaded.folders["folder1"].folders
 
-        assert isinstance(loaded.subfolders, dict)
-        assert "data" in loaded.subfolders
-        assert "models" in loaded.subfolders
-        assert loaded.subfolders["data"].name == "data"
-        assert loaded.subfolders["models"].name == "models"
+    def test_merge_folders_recursively(self, tmp_path):
+        """Test that _merge_folders handles deeply nested structures."""
+        workspace = Workspace(name="test", path=tmp_path / "test")
+        workspace.path.mkdir(parents=True, exist_ok=True)
 
-    def test_workspace_mixed_subfolder_types(self):
-        """Test that list can contain both dict and WorkspaceSubfolder representations."""
-        sub1 = WorkspaceSubfolder(name="explicit")
+        # Create initial structure: root -> level1 -> level2a
+        folder1 = WorkspaceFolder(
+            name="root",
+            folders=[
+                WorkspaceFolder(
+                    name="level1",
+                    folders=[WorkspaceFolder(name="level2a")],
+                )
+            ],
+        )
+        workspace.initialize_folder(folder1)
 
-        # This tests the handling of dict representations in the list
-        workspace = Workspace(name="test", subfolders=[sub1, {"name": "implicit"}])
+        # Merge in: root -> level1 -> level2b
+        folder2 = WorkspaceFolder(
+            name="root",
+            folders=[
+                WorkspaceFolder(
+                    name="level1",
+                    folders=[WorkspaceFolder(name="level2b")],
+                )
+            ],
+        )
+        workspace.initialize_folder(folder2)
 
-        assert "explicit" in workspace.subfolders
-        assert "implicit" in workspace.subfolders
-        assert workspace.subfolders["explicit"].name == "explicit"
-        assert workspace.subfolders["implicit"].name == "implicit"
+        # Both level2a and level2b should exist
+        assert (tmp_path / "test" / "root" / "level1" / "level2a").exists()
+        assert (tmp_path / "test" / "root" / "level1" / "level2b").exists()
+        assert len(workspace.folders["root"].folders["level1"].folders) == 2

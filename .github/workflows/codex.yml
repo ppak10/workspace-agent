@@ -34,7 +34,7 @@ jobs:
       run: uv pip install -e .
 
     - name: Install Codex CLI
-      run: npm install -g codex
+      run: npm install -g @openai/codex
 
     - name: Verify Codex CLI installation
       run: |
@@ -44,7 +44,7 @@ jobs:
     - name: Install MCP server to Codex CLI
       run: |
         source .venv/bin/activate
-        workspace mcp install --dev
+        workspace mcp install --dev --client codex
 
     - name: Verify workspace MCP installation
       run: |

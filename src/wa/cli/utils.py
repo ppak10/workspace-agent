@@ -1,3 +1,5 @@
+import typer
+
 from pathlib import Path
 from rich import print as rprint
 

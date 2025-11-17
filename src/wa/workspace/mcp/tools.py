@@ -6,13 +6,13 @@ from typing import Literal, Union
 Method = Literal["create", "read", "delete"]
 
 
-def register_workspace_folder_tools(app: FastMCP):
+def register_workspace_tools(app: FastMCP):
     from wa.mcp.types import ToolSuccess, ToolError
     from wa.mcp.utils import tool_success, tool_error
     from wa.models import Workspace
 
     @app.tool(
-        title="Workspace Folder Management",
+        title="Workspace Management",
         description="List all workspace folders or create, read, and delete a given workspace",
         structured_output=True,
     )
@@ -29,30 +29,30 @@ def register_workspace_folder_tools(app: FastMCP):
             method: Either 'create', 'read', or 'delete'. Requires 'workspace_name' to be provided.
             force: Utilized for either 'create' or 'delete methods.
         """
-        from wa.folder.list import list_workspace_folders
-        from wa.folder.create import create_workspace_folder
-        from wa.folder.read import read_workspace_folder
-        from wa.folder.delete import delete_workspace_folder
+        from wa.workspace.list import list_workspaces
+        from wa.workspace.create import create_workspace
+        from wa.workspace.read import read_workspace
+        from wa.workspace.delete import delete_workspace
 
         try:
             if workspace_name is None:
-                workspace_folder_names = list_workspace_folders()
+                workspace_folder_names = list_workspaces()
                 return tool_success(workspace_folder_names)
 
             elif method == "create":
-                workspace = create_workspace_folder(
-                    name=workspace_name,
+                workspace = create_workspace(
+                    workspace_name=workspace_name,
                     force=force,
                 )
                 return tool_success(workspace)
 
             elif method == "read":
-                workspace = read_workspace_folder(name=workspace_name)
+                workspace = read_workspace(workspace_name=workspace_name)
                 return tool_success(workspace)
 
             elif method == "delete":
-                workspace_path = delete_workspace_folder(
-                    name=workspace_name,
+                workspace_path = delete_workspace(
+                    workspace_name=workspace_name,
                     force=force,
                 )
                 return tool_success(workspace_path)
