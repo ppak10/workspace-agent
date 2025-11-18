@@ -450,3 +450,74 @@ class TestReadWorkspaceFolder:
         assert len(parent.folders) == 2
         assert "child1" in parent.folders
         assert "child2" in parent.folders
+
+    def test_read_workspace_folder_with_include_files(self, tmp_path):
+        """Test that read_workspace_folder populates files when include_files=True."""
+        workspaces_path = tmp_path / "workspaces"
+        workspace = Workspace(
+            name="test_workspace",
+            workspaces_path=workspaces_path,
+            folders=[
+                WorkspaceFolder(
+                    name="parent",
+                    folders=[WorkspaceFolder(name="child")],
+                ),
+            ],
+        )
+        workspace.save()
+
+        # Create directories and files
+        parent_path = workspace.path / "parent"
+        child_path = parent_path / "child"
+        parent_path.mkdir(parents=True, exist_ok=True)
+        child_path.mkdir(parents=True, exist_ok=True)
+        (parent_path / "parent_file.txt").write_text("parent content")
+        (child_path / "child_file.txt").write_text("child content")
+
+        folder = read_workspace_folder(
+            workspace_folder_name="parent",
+            workspace_name="test_workspace",
+            workspaces_path=workspaces_path,
+            include_files=True,
+        )
+
+        assert "parent_file.txt" in folder.files
+        assert "child_file.txt" in folder.folders["child"].files
+
+    def test_read_workspace_folder_list_nonexistent_first_folder(self, tmp_path):
+        """Test that read_workspace_folder raises error when first folder in list doesn't exist."""
+        workspaces_path = tmp_path / "workspaces"
+        workspace = Workspace(
+            name="test_workspace",
+            workspaces_path=workspaces_path,
+            folders=[WorkspaceFolder(name="existing")],
+        )
+        workspace.save()
+
+        with pytest.raises(
+            FileNotFoundError, match="Workspace subfolder `nonexistent` not found"
+        ):
+            read_workspace_folder(
+                workspace_folder_name=["nonexistent", "child"],
+                workspace_name="test_workspace",
+                workspaces_path=workspaces_path,
+            )
+
+
+class TestReadWorkspaceErrors:
+    """Test error conditions in read functions."""
+
+    def test_read_workspace_missing_config_file(self, tmp_path):
+        """Test that read_workspace raises error when workspace.json is missing."""
+        workspaces_path = tmp_path / "workspaces"
+        workspace_path = workspaces_path / "test_workspace"
+        workspace_path.mkdir(parents=True, exist_ok=True)
+        # Don't create workspace.json file
+
+        with pytest.raises(
+            FileNotFoundError, match="Config file.*workspace.json.*does not exist"
+        ):
+            read_workspace(
+                workspace_name="test_workspace",
+                workspaces_path=workspaces_path,
+            )
