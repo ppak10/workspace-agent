@@ -6,7 +6,7 @@
 
 # workspace-agent
 
- Workspace management package for `out` folder shared between different packages.
+ Workspace management package for `workspaces` folder shared between different packages.
 
 <p align="center">
   <img src="./icon.svg" alt="Logo" width="50%">
