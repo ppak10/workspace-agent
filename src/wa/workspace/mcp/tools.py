@@ -30,7 +30,7 @@ def register_workspace_tools(app: FastMCP):
 
         Args:
             workspace_name: Folder name of workspace, lists all workspace folders if left empty.
-            folder_name: List of folder names, ordered by path heirarchy.
+            folder_name: List of folder names, ordered by path heirarchy (i.e. 'workspace/folder/subfolder' is ["workspace", "folder", "subfolder"]).
             method: Either 'list', 'create', or 'read'. Requires 'workspace_name' to be provided.
             include_files: Include file names for 'read' method for workspace folder.
             force: Utilized for either 'create' or 'delete methods.
@@ -72,7 +72,10 @@ def register_workspace_tools(app: FastMCP):
                         )
                         return tool_success(folder)
                     else:
-                        workspace = read_workspace(workspace_name=workspace_name)
+                        workspace = read_workspace(
+                            workspace_name=workspace_name,
+                            include_files=include_files,
+                        )
                         return tool_success(workspace)
 
                 # TODO: Turn back on when granular delete is implemented

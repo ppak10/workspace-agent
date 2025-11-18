@@ -13,6 +13,7 @@ class WorkspaceModel(BaseModel):
     name: str
     path: Path = Path("")
     folders: dict[str, WorkspaceFolder] = {}
+    files: list[str] = Field(default_factory=list)
 
     @field_validator("name", mode="before")
     @classmethod
@@ -45,8 +46,6 @@ class WorkspaceFolder(WorkspaceModel):
     """
     Recursive Folder class.
     """
-
-    files: list[str] = Field(default_factory=list)
 
     def initialize(self, force: bool = False):
         self.path.mkdir(exist_ok=force)

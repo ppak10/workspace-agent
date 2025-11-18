@@ -4,9 +4,25 @@ from wa.models import Workspace, WorkspaceFolder
 from wa.utils import get_project_root
 
 
+def include_files_recursive(
+    folders: dict[str, WorkspaceFolder], parent_path: Path
+) -> None:
+    """
+    Recursively populate files for all folders.
+    """
+    for name, folder in folders.items():
+        folder_path = parent_path / name
+        folder.path = folder_path
+        if folder_path.exists():
+            folder.files = [f.name for f in folder_path.iterdir() if f.is_file()]
+        if folder.folders:
+            include_files_recursive(folder.folders, folder_path)
+
+
 def read_workspace(
     workspace_name: str,
     workspaces_path: Path | None = None,
+    include_files: bool = False,
 ) -> Workspace:
     """
     Loads workspace folder config file and returns Workspace object.
@@ -32,6 +48,11 @@ def read_workspace(
         )
 
     workspace = Workspace.load(workspace_file)
+
+    # Populate files recursively if requested
+    if include_files:
+        include_files_recursive(workspace.folders, workspace.path)
+        workspace.files = [f.name for f in workspace.path.iterdir() if f.is_file()]
 
     return workspace
 
@@ -83,6 +104,7 @@ def read_workspace_folder(
 
     # Populate files if requested
     if include_files and folder.path.exists():
+        include_files_recursive(folder.folders, folder.path)
         folder.files = [f.name for f in folder.path.iterdir() if f.is_file()]
 
     return folder
