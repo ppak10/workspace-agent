@@ -91,6 +91,8 @@ class Workspace(WorkspaceModel):
         # Merge the nested subfolders from new into existing
         for index, (name, new_nested) in enumerate(new.folders.items()):
             if name in existing.folders:
+                # Copy path from existing folder to new folder
+                new_nested.path = existing.folders[name].path
                 # Recursively merge if nested subfolder already exists
                 # TODO: Add in overwrite check.
                 self._merge_folders(existing.folders[name], new_nested, force=force)
