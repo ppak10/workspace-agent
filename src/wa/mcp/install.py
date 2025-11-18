@@ -24,7 +24,7 @@ def install(path: Path, client: str, include_agent: bool = True) -> None:
                 agent_file = files(data) / "mcp" / "agent.md"
                 claude_agents_path = path / ".claude" / "agents"
                 claude_agents_path.mkdir(parents=True, exist_ok=True)
-                claude_agent_config_path = claude_agents_path / "wa.md"
+                claude_agent_config_path = claude_agents_path / "workspace.md"
                 with (
                     agent_file.open("rb") as src,
                     open(claude_agent_config_path, "wb") as dst,

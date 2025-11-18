@@ -129,6 +129,125 @@ class TestReadWorkspace:
 
         assert loaded.version == __version__
 
+    def test_read_workspace_with_include_files(self, tmp_path):
+        """Test that read_workspace populates files when include_files=True."""
+        workspaces_path = tmp_path / "workspaces"
+        workspace = Workspace(
+            name="test_workspace",
+            workspaces_path=workspaces_path,
+            folders=[WorkspaceFolder(name="folder1")],
+        )
+        workspace.save()
+
+        # Initialize folder and create files
+        folder_path = workspace.path / "folder1"
+        folder_path.mkdir(parents=True, exist_ok=True)
+        (folder_path / "file1.txt").write_text("content1")
+        (folder_path / "file2.txt").write_text("content2")
+
+        loaded = read_workspace(
+            workspace_name="test_workspace",
+            workspaces_path=workspaces_path,
+            include_files=True,
+        )
+
+        assert "folder1" in loaded.folders
+        assert "file1.txt" in loaded.folders["folder1"].files
+        assert "file2.txt" in loaded.folders["folder1"].files
+
+    def test_read_workspace_with_include_files_nested(self, tmp_path):
+        """Test that read_workspace populates files recursively in nested folders."""
+        workspaces_path = tmp_path / "workspaces"
+        workspace = Workspace(
+            name="test_workspace",
+            workspaces_path=workspaces_path,
+            folders=[
+                WorkspaceFolder(
+                    name="parent",
+                    folders=[
+                        WorkspaceFolder(
+                            name="child",
+                            folders=[WorkspaceFolder(name="grandchild")],
+                        ),
+                    ],
+                ),
+            ],
+        )
+        workspace.save()
+
+        # Create directories and files at each level
+        parent_path = workspace.path / "parent"
+        child_path = parent_path / "child"
+        grandchild_path = child_path / "grandchild"
+
+        parent_path.mkdir(parents=True, exist_ok=True)
+        child_path.mkdir(parents=True, exist_ok=True)
+        grandchild_path.mkdir(parents=True, exist_ok=True)
+
+        (parent_path / "parent_file.txt").write_text("parent content")
+        (child_path / "child_file.txt").write_text("child content")
+        (grandchild_path / "grandchild_file.txt").write_text("grandchild content")
+
+        loaded = read_workspace(
+            workspace_name="test_workspace",
+            workspaces_path=workspaces_path,
+            include_files=True,
+        )
+
+        assert "parent_file.txt" in loaded.folders["parent"].files
+        assert "child_file.txt" in loaded.folders["parent"].folders["child"].files
+        assert (
+            "grandchild_file.txt"
+            in loaded.folders["parent"].folders["child"].folders["grandchild"].files
+        )
+
+    def test_read_workspace_without_include_files_does_not_populate(self, tmp_path):
+        """Test that read_workspace does not populate files when include_files=False."""
+        workspaces_path = tmp_path / "workspaces"
+        workspace = Workspace(
+            name="test_workspace",
+            workspaces_path=workspaces_path,
+            folders=[WorkspaceFolder(name="folder1")],
+        )
+        workspace.save()
+
+        # Initialize folder and create files
+        folder_path = workspace.path / "folder1"
+        folder_path.mkdir(parents=True, exist_ok=True)
+        (folder_path / "file1.txt").write_text("content1")
+
+        loaded = read_workspace(
+            workspace_name="test_workspace",
+            workspaces_path=workspaces_path,
+            include_files=False,
+        )
+
+        assert "folder1" in loaded.folders
+        assert loaded.folders["folder1"].files == []
+
+    def test_read_workspace_include_files_default_is_false(self, tmp_path):
+        """Test that include_files defaults to False."""
+        workspaces_path = tmp_path / "workspaces"
+        workspace = Workspace(
+            name="test_workspace",
+            workspaces_path=workspaces_path,
+            folders=[WorkspaceFolder(name="folder1")],
+        )
+        workspace.save()
+
+        # Initialize folder and create files
+        folder_path = workspace.path / "folder1"
+        folder_path.mkdir(parents=True, exist_ok=True)
+        (folder_path / "file1.txt").write_text("content1")
+
+        # Call without include_files parameter
+        loaded = read_workspace(
+            workspace_name="test_workspace",
+            workspaces_path=workspaces_path,
+        )
+
+        assert loaded.folders["folder1"].files == []
+
 
 class TestReadWorkspaceFolder:
     """Test the read_workspace_folder function."""
@@ -331,3 +450,74 @@ class TestReadWorkspaceFolder:
         assert len(parent.folders) == 2
         assert "child1" in parent.folders
         assert "child2" in parent.folders
+
+    def test_read_workspace_folder_with_include_files(self, tmp_path):
+        """Test that read_workspace_folder populates files when include_files=True."""
+        workspaces_path = tmp_path / "workspaces"
+        workspace = Workspace(
+            name="test_workspace",
+            workspaces_path=workspaces_path,
+            folders=[
+                WorkspaceFolder(
+                    name="parent",
+                    folders=[WorkspaceFolder(name="child")],
+                ),
+            ],
+        )
+        workspace.save()
+
+        # Create directories and files
+        parent_path = workspace.path / "parent"
+        child_path = parent_path / "child"
+        parent_path.mkdir(parents=True, exist_ok=True)
+        child_path.mkdir(parents=True, exist_ok=True)
+        (parent_path / "parent_file.txt").write_text("parent content")
+        (child_path / "child_file.txt").write_text("child content")
+
+        folder = read_workspace_folder(
+            workspace_folder_name="parent",
+            workspace_name="test_workspace",
+            workspaces_path=workspaces_path,
+            include_files=True,
+        )
+
+        assert "parent_file.txt" in folder.files
+        assert "child_file.txt" in folder.folders["child"].files
+
+    def test_read_workspace_folder_list_nonexistent_first_folder(self, tmp_path):
+        """Test that read_workspace_folder raises error when first folder in list doesn't exist."""
+        workspaces_path = tmp_path / "workspaces"
+        workspace = Workspace(
+            name="test_workspace",
+            workspaces_path=workspaces_path,
+            folders=[WorkspaceFolder(name="existing")],
+        )
+        workspace.save()
+
+        with pytest.raises(
+            FileNotFoundError, match="Workspace subfolder `nonexistent` not found"
+        ):
+            read_workspace_folder(
+                workspace_folder_name=["nonexistent", "child"],
+                workspace_name="test_workspace",
+                workspaces_path=workspaces_path,
+            )
+
+
+class TestReadWorkspaceErrors:
+    """Test error conditions in read functions."""
+
+    def test_read_workspace_missing_config_file(self, tmp_path):
+        """Test that read_workspace raises error when workspace.json is missing."""
+        workspaces_path = tmp_path / "workspaces"
+        workspace_path = workspaces_path / "test_workspace"
+        workspace_path.mkdir(parents=True, exist_ok=True)
+        # Don't create workspace.json file
+
+        with pytest.raises(
+            FileNotFoundError, match="Config file.*workspace.json.*does not exist"
+        ):
+            read_workspace(
+                workspace_name="test_workspace",
+                workspaces_path=workspaces_path,
+            )

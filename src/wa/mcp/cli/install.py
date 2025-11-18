@@ -27,7 +27,7 @@ def register_mcp_install(app: typer.Typer):
             wa_path = Path(project_path)
         else:
             # Path(wa.__file__) example:
-            # /GitHub/additive-manufacturing-agent/.venv/lib/python3.13/site-packages/wa
+            # /GitHub/workspace-agent/.venv/lib/python3.13/site-packages/wa
             # Going up 5 levels to get to the project root
             wa_path = Path(wa.__file__).parents[5]
 

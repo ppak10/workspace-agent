@@ -13,6 +13,7 @@ class WorkspaceModel(BaseModel):
     name: str
     path: Path = Path("")
     folders: dict[str, WorkspaceFolder] = {}
+    files: list[str] = Field(default_factory=list)
 
     @field_validator("name", mode="before")
     @classmethod
@@ -45,8 +46,6 @@ class WorkspaceFolder(WorkspaceModel):
     """
     Recursive Folder class.
     """
-
-    files: list[str] = Field(default_factory=list)
 
     def initialize(self, force: bool = False):
         self.path.mkdir(exist_ok=force)
@@ -91,6 +90,8 @@ class Workspace(WorkspaceModel):
         # Merge the nested subfolders from new into existing
         for index, (name, new_nested) in enumerate(new.folders.items()):
             if name in existing.folders:
+                # Copy path from existing folder to new folder
+                new_nested.path = existing.folders[name].path
                 # Recursively merge if nested subfolder already exists
                 # TODO: Add in overwrite check.
                 self._merge_folders(existing.folders[name], new_nested, force=force)
