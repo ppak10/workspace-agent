@@ -63,12 +63,7 @@ def install(path: Path, client: str, include_agent: bool = True) -> None:
             ]
 
         case _:
-            rprint(
-                "[yellow]No client provided.[/yellow]\n"
-                "[bold]Please specify where to install with one of the following:[/bold]\n"
-                "  • [green]--client claude-code[/green] to install for Claude Code\n"
-                "  • Other options coming soon..."
-            )
+            rprint("[yellow]No client provided.[/yellow]")
 
     try:
         rprint(f"[blue]Running command:[/blue] {' '.join(cmd)}")
