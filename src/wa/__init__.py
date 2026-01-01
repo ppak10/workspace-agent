@@ -14,6 +14,10 @@ from .workspace.delete import delete_workspace
 from .workspace.list import list_workspaces
 from .workspace.read import read_workspace, read_workspace_folder
 
+from .workspace.models.workspace import Workspace
+from .workspace.models.workspace_base_model import WorkspaceBaseModel
+from .workspace.models.workspace_folder import WorkspaceFolder
+
 __all__ = [
     "create_workspace",
     "create_workspace_folder",
@@ -21,4 +25,7 @@ __all__ = [
     "list_workspaces",
     "read_workspace",
     "read_workspace_folder",
+    "Workspace",
+    "WorkspaceBaseModel",
+    "WorkspaceFolder",
 ]

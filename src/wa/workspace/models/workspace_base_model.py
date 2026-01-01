@@ -6,13 +6,11 @@ from pydantic import BaseModel, Field, field_validator
 from wa import __version__
 from wa.utils import create_pathname
 
-from .workspace_folder import WorkspaceFolder
-
 
 class WorkspaceBaseModel(BaseModel):
     name: str
     path: Path = Path("")
-    folders: dict[str, WorkspaceFolder] = {}
+    folders: dict[str, "WorkspaceFolder"] = {}
     files: list[str] = Field(default_factory=list)
 
     @field_validator("name", mode="before")
@@ -24,6 +22,8 @@ class WorkspaceBaseModel(BaseModel):
     @classmethod
     def parse_folders(cls, v):
         """Convert list of WorkspaceFolder objects to dict keyed by name."""
+        from .workspace_folder import WorkspaceFolder
+
         if isinstance(v, dict):
             return v
 
