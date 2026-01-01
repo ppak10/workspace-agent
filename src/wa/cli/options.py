@@ -7,5 +7,5 @@ VerboseOption = Annotated[
 ]
 
 WorkspaceOption = Annotated[
-    str | None, typer.Option("--workspace", "-w", help="Workspace to perform operation")
+    str | None, typer.Option("--workspace", "-w", help="Workspace name")
 ]
