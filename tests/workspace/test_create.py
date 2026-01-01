@@ -328,3 +328,51 @@ class TestCreateWorkspaceFolder:
                     folder.path
                     == tmp_path / "workspaces" / "test_workspace" / "default_folder"
                 )
+
+    def test_create_workspace_folder_with_append_timestamp_string(self, tmp_path):
+        """Test that create_workspace_folder appends timestamp to string folder name."""
+        workspaces_path = tmp_path / "workspaces"
+        create_workspace(
+            workspace_name="test_workspace",
+            workspaces_path=workspaces_path,
+        )
+
+        folder = create_workspace_folder(
+            workspace_folder_name="timestamped_folder",
+            workspace_name="test_workspace",
+            workspaces_path=workspaces_path,
+            append_timestamp=True,
+        )
+
+        # Verify folder name starts with original name and has timestamp pattern
+        assert folder.name.startswith("timestamped_folder_")
+        # Check timestamp pattern: _YYYYMMDD_HHMMSS
+        assert len(folder.name) == len("timestamped_folder_") + 15
+        assert folder.path.exists()
+
+    def test_create_workspace_folder_with_append_timestamp_list(self, tmp_path):
+        """Test that create_workspace_folder appends timestamp to last item in list."""
+        workspaces_path = tmp_path / "workspaces"
+        create_workspace(
+            workspace_name="test_workspace",
+            workspaces_path=workspaces_path,
+        )
+
+        folder = create_workspace_folder(
+            workspace_folder_name=["parent", "child", "timestamped"],
+            workspace_name="test_workspace",
+            workspaces_path=workspaces_path,
+            append_timestamp=True,
+        )
+
+        # The last folder should have timestamp, parent and child should not
+        assert folder.name.startswith("timestamped_")
+        assert len(folder.name) == len("timestamped_") + 15
+
+        # Verify the full path structure
+        base_path = tmp_path / "workspaces" / "test_workspace"
+        assert (base_path / "parent").exists()
+        assert (base_path / "parent" / "child").exists()
+        assert folder.path.exists()
+        assert "parent" in str(folder.path)
+        assert "child" in str(folder.path)

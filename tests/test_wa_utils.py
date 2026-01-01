@@ -6,7 +6,7 @@ import importlib.util
 
 import pytest
 
-from wa.utils import get_project_root, create_pathname
+from wa.utils import get_project_root, create_pathname, append_timestamp_to_name
 
 
 class TestGetProjectRoot:
@@ -170,3 +170,144 @@ class TestCreatePathname:
         result = create_pathname("before\x00after")
         assert result == "beforeafter"
         assert "\x00" not in result
+
+
+class TestAppendTimestampToName:
+    """Test the append_timestamp_to_name function."""
+
+    def test_append_timestamp_to_name_string_input(self):
+        """Test that append_timestamp_to_name adds timestamp to string."""
+        from datetime import datetime
+
+        # Mock datetime to return a fixed time
+        mock_datetime = MagicMock()
+        mock_datetime.now.return_value.strftime.return_value = (
+            "test_folder_20240315_143022"
+        )
+
+        with patch("wa.utils.datetime", mock_datetime):
+            result = append_timestamp_to_name("test_folder")
+            assert result == "test_folder_20240315_143022"
+            # Verify strftime was called with correct format
+            mock_datetime.now.return_value.strftime.assert_called_once_with(
+                "test_folder_%Y%m%d_%H%M%S"
+            )
+
+    def test_append_timestamp_to_name_list_input_single_element(self):
+        """Test that append_timestamp_to_name modifies last element of single-element list."""
+        from datetime import datetime
+
+        mock_datetime = MagicMock()
+        mock_datetime.now.return_value.strftime.return_value = (
+            "workspace_20240315_143022"
+        )
+
+        with patch("wa.utils.datetime", mock_datetime):
+            result = append_timestamp_to_name(["workspace"])
+            assert result == ["workspace_20240315_143022"]
+            assert isinstance(result, list)
+
+    def test_append_timestamp_to_name_list_input_multiple_elements(self):
+        """Test that append_timestamp_to_name only modifies last element of multi-element list."""
+        from datetime import datetime
+
+        mock_datetime = MagicMock()
+        mock_datetime.now.return_value.strftime.return_value = (
+            "subfolder_20240315_143022"
+        )
+
+        with patch("wa.utils.datetime", mock_datetime):
+            result = append_timestamp_to_name(["folder1", "folder2", "subfolder"])
+            assert result == ["folder1", "folder2", "subfolder_20240315_143022"]
+            assert isinstance(result, list)
+            # Verify first two elements are unchanged
+            assert result[0] == "folder1"
+            assert result[1] == "folder2"
+
+    def test_append_timestamp_to_name_empty_string(self):
+        """Test that append_timestamp_to_name handles empty string."""
+        from datetime import datetime
+
+        mock_datetime = MagicMock()
+        mock_datetime.now.return_value.strftime.return_value = "_20240315_143022"
+
+        with patch("wa.utils.datetime", mock_datetime):
+            result = append_timestamp_to_name("")
+            assert result == "_20240315_143022"
+            # Verify the format string starts with empty string
+            mock_datetime.now.return_value.strftime.assert_called_once_with(
+                "_%Y%m%d_%H%M%S"
+            )
+
+    def test_append_timestamp_to_name_format_verification(self):
+        """Test that append_timestamp_to_name uses correct datetime format without mocking."""
+        import re
+        from datetime import datetime
+
+        # Test with actual datetime (no mocking) to verify format pattern
+        result = append_timestamp_to_name("test")
+
+        # Verify the format matches: name_YYYYMMDD_HHMMSS
+        pattern = r"^test_\d{8}_\d{6}$"
+        assert re.match(
+            pattern, result
+        ), f"Result '{result}' does not match expected format"
+
+        # Extract and verify the timestamp part
+        timestamp_part = result.replace("test_", "")
+        date_part, time_part = timestamp_part.split("_")
+
+        # Verify date format (YYYYMMDD)
+        assert len(date_part) == 8
+        year = int(date_part[:4])
+        month = int(date_part[4:6])
+        day = int(date_part[6:8])
+        assert 2020 <= year <= 2100  # Reasonable year range
+        assert 1 <= month <= 12
+        assert 1 <= day <= 31
+
+        # Verify time format (HHMMSS)
+        assert len(time_part) == 6
+        hour = int(time_part[:2])
+        minute = int(time_part[2:4])
+        second = int(time_part[4:6])
+        assert 0 <= hour <= 23
+        assert 0 <= minute <= 59
+        assert 0 <= second <= 59
+
+    def test_append_timestamp_to_name_list_format_verification(self):
+        """Test that append_timestamp_to_name uses correct format for list input."""
+        import re
+
+        result = append_timestamp_to_name(["parent", "child"])
+
+        # Verify list structure
+        assert len(result) == 2
+        assert result[0] == "parent"
+
+        # Verify second element has timestamp appended
+        pattern = r"^child_\d{8}_\d{6}$"
+        assert re.match(
+            pattern, result[1]
+        ), f"Result '{result[1]}' does not match expected format"
+
+    def test_append_timestamp_to_name_preserves_list_reference(self):
+        """Test that append_timestamp_to_name modifies and returns the same list object."""
+        original_list = ["test", "folder"]
+        result = append_timestamp_to_name(original_list)
+
+        # The function should modify and return the same list object
+        assert result is original_list
+
+    def test_append_timestamp_to_name_string_with_special_characters(self):
+        """Test that append_timestamp_to_name works with strings containing special characters."""
+        from datetime import datetime
+
+        mock_datetime = MagicMock()
+        mock_datetime.now.return_value.strftime.return_value = (
+            "my-folder_name_20240315_143022"
+        )
+
+        with patch("wa.utils.datetime", mock_datetime):
+            result = append_timestamp_to_name("my-folder_name")
+            assert result == "my-folder_name_20240315_143022"

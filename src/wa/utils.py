@@ -1,6 +1,7 @@
 import importlib.util
 import re
 
+from datetime import datetime
 from pathlib import Path
 
 
@@ -35,3 +36,15 @@ def create_pathname(name: str) -> str:
     name = re.sub(r'[<>:"/\\|?*\x00-\x1F]', "", name)
 
     return name[:255]
+
+
+def append_timestamp_to_name(name: str | list[str]) -> str | list[str]:
+    """
+    Appends year, month, day, hour, minute, second timestamp to provided string
+    or last string in list of strings.
+    """
+    if isinstance(name, str):
+        return datetime.now().strftime(f"{name}_%Y%m%d_%H%M%S")
+    elif isinstance(name, list):
+        name[-1] = datetime.now().strftime(f"{name[-1]}_%Y%m%d_%H%M%S")
+        return name

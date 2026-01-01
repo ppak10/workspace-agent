@@ -3,6 +3,7 @@ import warnings
 
 from pathlib import Path
 from rich import print as rprint
+from typing_extensions import deprecated
 
 from .options import WorkspaceOption
 from wa.models import Workspace
@@ -45,6 +46,7 @@ def get_workspace(
     return Workspace.load(workspace_config_path)
 
 
+@deprecated("Use get_workspace instead")
 def get_workspace_path(
     workspace: WorkspaceOption,
     config_file: str = "workspace.json",
