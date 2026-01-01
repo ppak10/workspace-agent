@@ -227,61 +227,42 @@ class TestWorkspace:
         with pytest.raises(FileNotFoundError, match="Workspace file not found"):
             Workspace.load(tmp_path / "nonexistent.json")
 
-    def test_initialize_folder_creates_folder(self, tmp_path):
-        """Test that initialize_folder creates the folder."""
+    def test_create_folder_creates_folder(self, tmp_path):
+        """Test that create_folder creates the folder."""
         workspace = Workspace(name="test", path=tmp_path / "test")
         workspace.path.mkdir(parents=True, exist_ok=True)
-        folder = WorkspaceFolder(name="new_folder")
-        result = workspace.initialize_folder(folder)
+        result = workspace.create_folder(name_or_path="new_folder")
         assert (tmp_path / "test" / "new_folder").exists()
         assert "new_folder" in workspace.folders
 
-    def test_initialize_folder_returns_deepest_folder(self, tmp_path):
-        """Test that initialize_folder returns the deepest nested folder."""
+    def test_create_folder_returns_deepest_folder(self, tmp_path):
+        """Test that create_folder returns the deepest nested folder."""
         workspace = Workspace(name="test", path=tmp_path / "test")
         workspace.path.mkdir(parents=True, exist_ok=True)
-        folder = WorkspaceFolder(
-            name="parent",
-            folders=[
-                WorkspaceFolder(
-                    name="child",
-                    folders=[WorkspaceFolder(name="grandchild")],
-                )
-            ],
-        )
-        result = workspace.initialize_folder(folder)
+        result = workspace.create_folder(name_or_path=["parent", "child", "grandchild"])
         assert result.name == "grandchild"
         assert result.path == tmp_path / "test" / "parent" / "child" / "grandchild"
 
-    def test_initialize_folder_merges_existing_folder(self, tmp_path):
-        """Test that initialize_folder merges into existing folders."""
+    def test_create_folder_merges_existing_folder(self, tmp_path):
+        """Test that create_folder merges into existing folders."""
         workspace = Workspace(name="test", path=tmp_path / "test")
         workspace.path.mkdir(parents=True, exist_ok=True)
         # Create first folder with child1
-        folder1 = WorkspaceFolder(
-            name="parent",
-            folders=[WorkspaceFolder(name="child1")],
-        )
-        workspace.initialize_folder(folder1)
+        workspace.create_folder(name_or_path=["parent", "child1"])
 
         # Create second folder with child2 under same parent
-        folder2 = WorkspaceFolder(
-            name="parent",
-            folders=[WorkspaceFolder(name="child2")],
-        )
-        workspace.initialize_folder(folder2)
+        workspace.create_folder(name_or_path=["parent", "child2"])
 
         # Both children should exist
         assert (tmp_path / "test" / "parent" / "child1").exists()
         assert (tmp_path / "test" / "parent" / "child2").exists()
         assert len(workspace.folders["parent"].folders) == 2
 
-    def test_initialize_folder_saves_config(self, tmp_path):
-        """Test that initialize_folder saves the workspace configuration."""
+    def test_create_folder_saves_config(self, tmp_path):
+        """Test that create_folder saves the workspace configuration."""
         workspace = Workspace(name="test", path=tmp_path / "test")
         workspace.path.mkdir(parents=True, exist_ok=True)
-        folder = WorkspaceFolder(name="new_folder")
-        workspace.initialize_folder(folder)
+        workspace.create_folder(name_or_path="new_folder")
         config_path = tmp_path / "test" / "workspace.json"
         assert config_path.exists()
 
@@ -312,28 +293,10 @@ class TestWorkspace:
         workspace.path.mkdir(parents=True, exist_ok=True)
 
         # Create initial structure: root -> level1 -> level2a
-        folder1 = WorkspaceFolder(
-            name="root",
-            folders=[
-                WorkspaceFolder(
-                    name="level1",
-                    folders=[WorkspaceFolder(name="level2a")],
-                )
-            ],
-        )
-        workspace.initialize_folder(folder1)
+        workspace.create_folder(name_or_path=["root", "level1", "level2a"])
 
         # Merge in: root -> level1 -> level2b
-        folder2 = WorkspaceFolder(
-            name="root",
-            folders=[
-                WorkspaceFolder(
-                    name="level1",
-                    folders=[WorkspaceFolder(name="level2b")],
-                )
-            ],
-        )
-        workspace.initialize_folder(folder2)
+        workspace.create_folder(name_or_path=["root", "level1", "level2b"])
 
         # Both level2a and level2b should exist
         assert (tmp_path / "test" / "root" / "level1" / "level2a").exists()

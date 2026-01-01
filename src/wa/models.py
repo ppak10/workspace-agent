@@ -101,43 +101,81 @@ class Workspace(WorkspaceModel):
                 new_nested.initialize(force=force)
                 existing.folders[name] = new_nested
 
-    def initialize_folder(
-        self,
-        folder: WorkspaceFolder,
-        force: bool = False,
-    ) -> WorkspaceFolder:
+    def _get_deepest_folder(self, folder: WorkspaceFolder) -> WorkspaceFolder:
         """
-        Assigns path to folder and initializes folder inside workspace.
-        If a folder with the same name already exists, merges the nested folders.
+        Get the deepest nested folder in a folder hierarchy.
 
         Args:
-            folder: Workspace folder object.
-            force: Overwrite existing folder.
+            folder: The folder to start from.
 
         Returns:
-            Path: The path of the created folder (deepest nested path if nested).
+            The deepest nested folder.
         """
+        if folder.folders:
+            # Get the first (and should be only) nested subfolder
+            nested = next(iter(folder.folders.values()))
+            return self._get_deepest_folder(nested)
+        return folder
+
+    def create_folder(
+        self,
+        name_or_path: str | Path | list[str],
+        append_timestamp: bool = False,
+        force: bool = False,
+        **kwargs,
+    ) -> WorkspaceFolder:
+        """
+        Create a folder inside this workspace.
+
+        Args:
+            name_or_path: Folder name, Path, or list of folder names for nested structure.
+            append_timestamp: Whether to append timestamp to the folder name.
+            force: Overwrite existing folder.
+            **kwargs: Additional arguments to pass to WorkspaceFolder.
+
+        Returns:
+            WorkspaceFolder: The created folder (deepest nested folder if nested).
+        """
+        from wa.utils import append_timestamp_to_name_or_path
+
+        if append_timestamp:
+            name_or_path = append_timestamp_to_name_or_path(name_or_path)
+
+        # Build WorkspaceFolder from name_or_path
+        if isinstance(name_or_path, str):
+            workspace_folder = WorkspaceFolder(name=name_or_path, **kwargs)
+        elif isinstance(name_or_path, Path):
+            workspace_folder = WorkspaceFolder(name=str(name_or_path), **kwargs)
+        elif isinstance(name_or_path, list):
+            folder_names = name_or_path.copy()
+            folder_names.reverse()
+
+            for index, name in enumerate(folder_names):
+                if index == 0:
+                    workspace_folder = WorkspaceFolder(name=name, **kwargs)
+                else:
+                    folders = {
+                        workspace_folder.name: workspace_folder,
+                    }
+                    workspace_folder = WorkspaceFolder(
+                        name=name, folders=folders, **kwargs
+                    )
+
+        # Initialize folder logic
         # Check if this top-level folder already exists
-        if folder.name in self.folders:
-            existing = self.folders[folder.name]
+        if workspace_folder.name in self.folders:
+            existing = self.folders[workspace_folder.name]
             # Merge the new subfolders into the existing subfolder
-            self._merge_folders(existing, folder, force=force)
+            self._merge_folders(existing, workspace_folder, force=force)
         else:
-            folder.path = self.path / folder.name
-            folder.initialize(force=force)
-            self.folders[folder.name] = folder
+            workspace_folder.path = self.path / workspace_folder.name
+            workspace_folder.initialize(force=force)
+            self.folders[workspace_folder.name] = workspace_folder
 
         self.save()
 
         # Return the deepest nested path
-        def get_deepest_folder(folder: WorkspaceFolder) -> WorkspaceFolder:
-            if folder.folders:
-                # Get the first (and should be only) nested subfolder
-                nested = next(iter(folder.folders.values()))
-                return get_deepest_folder(nested)
-            return folder
-
-        return get_deepest_folder(folder)
+        return self._get_deepest_folder(workspace_folder)
 
     def save(self, path: Path | None = None) -> Path:
         """

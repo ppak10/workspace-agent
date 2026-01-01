@@ -122,7 +122,7 @@ class TestCreateWorkspaceFolder:
         )
 
         folder = create_workspace_folder(
-            workspace_folder_name="test_folder",
+            name_or_path="test_folder",
             workspace_name="test_workspace",
             workspaces_path=workspaces_path,
         )
@@ -140,7 +140,7 @@ class TestCreateWorkspaceFolder:
         )
 
         folder = create_workspace_folder(
-            workspace_folder_name="simple_folder",
+            name_or_path="simple_folder",
             workspace_name="test_workspace",
             workspaces_path=workspaces_path,
         )
@@ -159,7 +159,7 @@ class TestCreateWorkspaceFolder:
         )
 
         folder = create_workspace_folder(
-            workspace_folder_name=["parent", "child", "grandchild"],
+            name_or_path=["parent", "child", "grandchild"],
             workspace_name="test_workspace",
             workspaces_path=workspaces_path,
         )
@@ -186,7 +186,7 @@ class TestCreateWorkspaceFolder:
         )
 
         create_workspace_folder(
-            workspace_folder_name=["level1", "level2", "level3"],
+            name_or_path=["level1", "level2", "level3"],
             workspace_name="test_workspace",
             workspaces_path=workspaces_path,
         )
@@ -207,7 +207,7 @@ class TestCreateWorkspaceFolder:
         assert len(workspace.folders) == 0
 
         create_workspace_folder(
-            workspace_folder_name="new_folder",
+            name_or_path="new_folder",
             workspace_name="test_workspace",
             workspaces_path=workspaces_path,
         )
@@ -230,14 +230,14 @@ class TestCreateWorkspaceFolder:
         )
 
         create_workspace_folder(
-            workspace_folder_name="existing_folder",
+            name_or_path="existing_folder",
             workspace_name="test_workspace",
             workspaces_path=workspaces_path,
         )
 
         # Create again with force
         folder = create_workspace_folder(
-            workspace_folder_name="existing_folder",
+            name_or_path="existing_folder",
             workspace_name="test_workspace",
             workspaces_path=workspaces_path,
             force=True,
@@ -256,14 +256,14 @@ class TestCreateWorkspaceFolder:
 
         # Create parent with child1
         create_workspace_folder(
-            workspace_folder_name=["parent", "child1"],
+            name_or_path=["parent", "child1"],
             workspace_name="test_workspace",
             workspaces_path=workspaces_path,
         )
 
         # Create parent with child2
         create_workspace_folder(
-            workspace_folder_name=["parent", "child2"],
+            name_or_path=["parent", "child2"],
             workspace_name="test_workspace",
             workspaces_path=workspaces_path,
         )
@@ -285,7 +285,7 @@ class TestCreateWorkspaceFolder:
 
         # Create folder in nonexistent workspace
         folder = create_workspace_folder(
-            workspace_folder_name="folder",
+            name_or_path="folder",
             workspace_name="nonexistent",
             workspaces_path=workspaces_path,
         )
@@ -305,7 +305,7 @@ class TestCreateWorkspaceFolder:
         )
 
         folder = create_workspace_folder(
-            workspace_folder_name=["single"],
+            name_or_path=["single"],
             workspace_name="test_workspace",
             workspaces_path=workspaces_path,
         )
@@ -320,7 +320,7 @@ class TestCreateWorkspaceFolder:
                 create_workspace(workspace_name="test_workspace")
 
                 folder = create_workspace_folder(
-                    workspace_folder_name="default_folder",
+                    name_or_path="default_folder",
                     workspace_name="test_workspace",
                 )
 
@@ -338,7 +338,7 @@ class TestCreateWorkspaceFolder:
         )
 
         folder = create_workspace_folder(
-            workspace_folder_name="timestamped_folder",
+            name_or_path="timestamped_folder",
             workspace_name="test_workspace",
             workspaces_path=workspaces_path,
             append_timestamp=True,
@@ -359,7 +359,7 @@ class TestCreateWorkspaceFolder:
         )
 
         folder = create_workspace_folder(
-            workspace_folder_name=["parent", "child", "timestamped"],
+            name_or_path=["parent", "child", "timestamped"],
             workspace_name="test_workspace",
             workspaces_path=workspaces_path,
             append_timestamp=True,

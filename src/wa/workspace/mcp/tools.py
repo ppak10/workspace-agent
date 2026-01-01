@@ -51,7 +51,7 @@ def register_workspace_tools(app: FastMCP):
                 if method == "create":
                     if len(folder_name) > 0:
                         folder = create_workspace_folder(
-                            workspace_folder_name=folder_name,
+                            name_or_path=folder_name,
                             workspace_name=workspace_name,
                             force=force,
                         )

@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from wa.models import Workspace, WorkspaceFolder
-from wa.utils import get_project_root, append_timestamp_to_name
+from wa.utils import get_project_root
 
 from .read import read_workspace
 
@@ -37,7 +37,7 @@ def create_workspace(
 
 
 def create_workspace_folder(
-    workspace_folder_name: str | list[str],
+    name_or_path: str | Path | list[str],
     workspace_name: str,
     workspaces_path: Path | None = None,
     append_timestamp: bool = False,
@@ -64,25 +64,10 @@ def create_workspace_folder(
             workspaces_path=workspaces_path,
         )
 
-    if append_timestamp:
-        workspace_folder_name = append_timestamp_to_name(workspace_folder_name)
-
-    if isinstance(workspace_folder_name, str):
-        workspace_folder = WorkspaceFolder(name=workspace_folder_name, **kwargs)
-    elif isinstance(workspace_folder_name, list):
-
-        folder_names = workspace_folder_name.copy()
-        folder_names.reverse()
-
-        for index, name in enumerate(folder_names):
-            if index == 0:
-                workspace_folder = WorkspaceFolder(name=name, **kwargs)
-            else:
-                folders = {
-                    workspace_folder.name: workspace_folder,
-                }
-                workspace_folder = WorkspaceFolder(name=name, folders=folders, **kwargs)
-
-    folder = workspace.initialize_folder(folder=workspace_folder, force=force)
-
-    return folder
+    # Use workspace.create_folder() to create the folder
+    return workspace.create_folder(
+        name_or_path=name_or_path,
+        append_timestamp=append_timestamp,
+        force=force,
+        **kwargs,
+    )
