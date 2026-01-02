@@ -84,7 +84,7 @@ class Workspace(WorkspaceBaseModel):
         Create a folder inside this workspace.
 
         Args:
-            name_or_path: Folder name, Path, or list of folder names for nested structure.
+            name_or_path: Folder name, Path (relative to workspace), or list of folder names for nested structure.
             append_timestamp: Whether to append timestamp to the folder name.
             force: Overwrite existing folder.
             **kwargs: Additional arguments to pass to WorkspaceFolder.
@@ -101,7 +101,8 @@ class Workspace(WorkspaceBaseModel):
         if isinstance(name_or_path, str):
             workspace_folder = WorkspaceFolder(name=name_or_path, **kwargs)
         elif isinstance(name_or_path, Path):
-            workspace_folder = WorkspaceFolder(name=str(name_or_path), **kwargs)
+            relative_path = self.path / name_or_path
+            workspace_folder = WorkspaceFolder(name=str(relative_path), **kwargs)
         elif isinstance(name_or_path, list):
             folder_names = name_or_path.copy()
             folder_names.reverse()
