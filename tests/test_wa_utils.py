@@ -6,7 +6,7 @@ import importlib.util
 
 import pytest
 
-from wa.utils import get_project_root, create_pathname, append_timestamp_to_name
+from wa.utils import get_project_root, create_pathname, append_timestamp_to_name_or_path
 
 
 class TestGetProjectRoot:
@@ -172,8 +172,8 @@ class TestCreatePathname:
         assert "\x00" not in result
 
 
-class TestAppendTimestampToName:
-    """Test the append_timestamp_to_name function."""
+class TestAppendTimestampToNameOrPath:
+    """Test the append_timestamp_to_name_or_path function."""
 
     def test_append_timestamp_to_name_string_input(self):
         """Test that append_timestamp_to_name adds timestamp to string."""
@@ -186,7 +186,7 @@ class TestAppendTimestampToName:
         )
 
         with patch("wa.utils.datetime", mock_datetime):
-            result = append_timestamp_to_name("test_folder")
+            result = append_timestamp_to_name_or_path("test_folder")
             assert result == "test_folder_20240315_143022"
             # Verify strftime was called with correct format
             mock_datetime.now.return_value.strftime.assert_called_once_with(
@@ -203,7 +203,7 @@ class TestAppendTimestampToName:
         )
 
         with patch("wa.utils.datetime", mock_datetime):
-            result = append_timestamp_to_name(["workspace"])
+            result = append_timestamp_to_name_or_path(["workspace"])
             assert result == ["workspace_20240315_143022"]
             assert isinstance(result, list)
 
@@ -217,7 +217,9 @@ class TestAppendTimestampToName:
         )
 
         with patch("wa.utils.datetime", mock_datetime):
-            result = append_timestamp_to_name(["folder1", "folder2", "subfolder"])
+            result = append_timestamp_to_name_or_path(
+                ["folder1", "folder2", "subfolder"]
+            )
             assert result == ["folder1", "folder2", "subfolder_20240315_143022"]
             assert isinstance(result, list)
             # Verify first two elements are unchanged
@@ -232,7 +234,7 @@ class TestAppendTimestampToName:
         mock_datetime.now.return_value.strftime.return_value = "_20240315_143022"
 
         with patch("wa.utils.datetime", mock_datetime):
-            result = append_timestamp_to_name("")
+            result = append_timestamp_to_name_or_path("")
             assert result == "_20240315_143022"
             # Verify the format string starts with empty string
             mock_datetime.now.return_value.strftime.assert_called_once_with(
@@ -245,7 +247,7 @@ class TestAppendTimestampToName:
         from datetime import datetime
 
         # Test with actual datetime (no mocking) to verify format pattern
-        result = append_timestamp_to_name("test")
+        result = append_timestamp_to_name_or_path("test")
 
         # Verify the format matches: name_YYYYMMDD_HHMMSS
         pattern = r"^test_\d{8}_\d{6}$"
@@ -279,7 +281,7 @@ class TestAppendTimestampToName:
         """Test that append_timestamp_to_name uses correct format for list input."""
         import re
 
-        result = append_timestamp_to_name(["parent", "child"])
+        result = append_timestamp_to_name_or_path(["parent", "child"])
 
         # Verify list structure
         assert len(result) == 2
@@ -294,7 +296,7 @@ class TestAppendTimestampToName:
     def test_append_timestamp_to_name_preserves_list_reference(self):
         """Test that append_timestamp_to_name modifies and returns the same list object."""
         original_list = ["test", "folder"]
-        result = append_timestamp_to_name(original_list)
+        result = append_timestamp_to_name_or_path(original_list)
 
         # The function should modify and return the same list object
         assert result is original_list
@@ -309,5 +311,5 @@ class TestAppendTimestampToName:
         )
 
         with patch("wa.utils.datetime", mock_datetime):
-            result = append_timestamp_to_name("my-folder_name")
+            result = append_timestamp_to_name_or_path("my-folder_name")
             assert result == "my-folder_name_20240315_143022"

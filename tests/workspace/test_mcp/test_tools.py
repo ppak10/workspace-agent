@@ -5,7 +5,8 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
-from wa.models import Workspace, WorkspaceFolder
+from wa.workspace.models.workspace import Workspace
+from wa.workspace.models.workspace_folder import WorkspaceFolder
 
 # Skip tests if mcp.server is not available (can happen due to import order issues)
 try:

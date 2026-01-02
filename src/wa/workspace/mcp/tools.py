@@ -9,7 +9,7 @@ Method = Literal["list", "create", "read"]
 def register_workspace_tools(app: FastMCP):
     from wa.mcp.types import ToolSuccess, ToolError
     from wa.mcp.utils import tool_success, tool_error
-    from wa.models import Workspace, WorkspaceFolder
+    from wa import Workspace, WorkspaceFolder
 
     @app.tool(
         title="Workspace Management",
@@ -51,7 +51,7 @@ def register_workspace_tools(app: FastMCP):
                 if method == "create":
                     if len(folder_name) > 0:
                         folder = create_workspace_folder(
-                            workspace_folder_name=folder_name,
+                            name_or_path=folder_name,
                             workspace_name=workspace_name,
                             force=force,
                         )

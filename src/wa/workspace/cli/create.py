@@ -21,7 +21,7 @@ def register_create(app: typer.Typer):
         if len(folder_name) > 0:
             try:
                 folder = create_workspace_folder(
-                    workspace_folder_name=folder_name,
+                    name_or_path=folder_name,
                     workspace_name=workspace_name,
                     workspaces_path=workspaces_path,
                     force=force,

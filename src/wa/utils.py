@@ -38,13 +38,20 @@ def create_pathname(name: str) -> str:
     return name[:255]
 
 
-def append_timestamp_to_name(name: str | list[str]) -> str | list[str]:
+def append_timestamp_to_name_or_path(
+    name_or_path: str | Path | list[str],
+) -> str | Path | list[str]:
     """
-    Appends year, month, day, hour, minute, second timestamp to provided string
-    or last string in list of strings.
+    Appends year, month, day, hour, minute, second timestamp to provided string,
+    Path (to the last component), or last string in list of strings.
     """
-    if isinstance(name, str):
-        return datetime.now().strftime(f"{name}_%Y%m%d_%H%M%S")
-    elif isinstance(name, list):
-        name[-1] = datetime.now().strftime(f"{name[-1]}_%Y%m%d_%H%M%S")
-        return name
+    if isinstance(name_or_path, str):
+        return datetime.now().strftime(f"{name_or_path}_%Y%m%d_%H%M%S")
+    elif isinstance(name_or_path, Path):
+        # Append timestamp to the last component of the Path
+        last_part = name_or_path.name
+        timestamped_name = datetime.now().strftime(f"{last_part}_%Y%m%d_%H%M%S")
+        return name_or_path.parent / timestamped_name
+    elif isinstance(name_or_path, list):
+        name_or_path[-1] = datetime.now().strftime(f"{name_or_path[-1]}_%Y%m%d_%H%M%S")
+        return name_or_path
