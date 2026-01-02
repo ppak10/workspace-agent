@@ -146,8 +146,15 @@ class TestWorkspace:
         workspace = Workspace(name="test", path=tmp_path / "test")
         workspace.path.mkdir(parents=True, exist_ok=True)
         result = workspace.create_folder(name_or_path=Path("path_folder"))
-        assert (tmp_path / "test" / "path_folder").exists()
-        assert "path_folder" in workspace.folders
+
+        # The name is sanitized (slashes removed) from the full path
+        from wa.utils import create_pathname
+
+        expected_name = create_pathname(str(tmp_path / "test" / "path_folder"))
+
+        assert result.name == expected_name
+        assert result.path.exists()
+        assert expected_name in workspace.folders
 
     def test_create_folder_list_name(self, tmp_path):
         """Test that create_folder creates nested folders from list."""
