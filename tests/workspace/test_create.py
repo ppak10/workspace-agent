@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from wa import __version__
-from wa.models import WorkspaceFolder
+from wa.workspace.models.workspace_folder import WorkspaceFolder
 from wa.workspace.create import create_workspace, create_workspace_folder
 
 

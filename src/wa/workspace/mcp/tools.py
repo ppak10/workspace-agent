@@ -9,7 +9,7 @@ Method = Literal["list", "create", "read"]
 def register_workspace_tools(app: FastMCP):
     from wa.mcp.types import ToolSuccess, ToolError
     from wa.mcp.utils import tool_success, tool_error
-    from wa.models import Workspace, WorkspaceFolder
+    from wa import Workspace, WorkspaceFolder
 
     @app.tool(
         title="Workspace Management",

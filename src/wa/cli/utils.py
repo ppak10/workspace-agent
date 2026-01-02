@@ -5,9 +5,10 @@ from pathlib import Path
 from rich import print as rprint
 from typing_extensions import deprecated
 
-from .options import WorkspaceOption
-from wa.models import Workspace
+from wa import Workspace
 from wa.utils import get_project_root
+
+from .options import WorkspaceOption
 
 
 def print_list(name: str, values: list[str] | None = None):

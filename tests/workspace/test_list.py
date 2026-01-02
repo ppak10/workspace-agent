@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
-from wa.models import Workspace
+from wa.workspace.models.workspace import Workspace
 from wa.workspace.list import list_workspaces
 
 

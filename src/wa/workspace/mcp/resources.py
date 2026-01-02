@@ -2,7 +2,7 @@ from mcp.server import FastMCP
 
 
 def register_workspace_resources(app: FastMCP):
-    from wa.models import Workspace
+    from wa import Workspace
 
     @app.resource("workspace://")
     def workspaces() -> list[str] | None:

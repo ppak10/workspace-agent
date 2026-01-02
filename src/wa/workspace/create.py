@@ -1,7 +1,8 @@
 from pathlib import Path
 
-from wa.models import Workspace, WorkspaceFolder
 from wa.utils import get_project_root
+from wa.workspace.models.workspace import Workspace
+from wa.workspace.models.workspace_folder import WorkspaceFolder
 
 from .read import read_workspace
 

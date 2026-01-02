@@ -5,7 +5,8 @@ from unittest.mock import patch
 
 import pytest
 
-from wa.models import Workspace, WorkspaceFolder
+from wa.workspace.models.workspace import Workspace
+from wa.workspace.models.workspace_folder import WorkspaceFolder
 from wa.workspace.read import read_workspace, read_workspace_folder
 
 
