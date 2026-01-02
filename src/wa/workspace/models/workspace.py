@@ -101,9 +101,11 @@ class Workspace(WorkspaceBaseModel):
         if isinstance(name_or_path, str):
             workspace_folder = WorkspaceFolder(name=name_or_path, **kwargs)
         elif isinstance(name_or_path, Path):
-            relative_path = self.path / name_or_path
-            workspace_folder = WorkspaceFolder(name=str(relative_path), **kwargs)
-        elif isinstance(name_or_path, list):
+            # Convert Path to list of parts to handle nested paths properly
+            name_or_path = list(name_or_path.parts)
+
+        # Handle both list (original) and Path (converted to list above)
+        if isinstance(name_or_path, list):
             folder_names = name_or_path.copy()
             folder_names.reverse()
 
